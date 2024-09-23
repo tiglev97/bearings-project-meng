@@ -1,3 +1,7 @@
 Tasks for Sept 18
 
 -FEMO dataset take all of it and combine it. Process it into one dataset to work with.
+
+Sept 25
+
+-Use FEMO dataset!!!!
