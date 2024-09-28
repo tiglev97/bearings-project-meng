@@ -18,12 +18,8 @@ if uploaded_file is not None:
 
     # tracking the time taken to load the data
     start_time = time.time()
-
     data_entry(uploaded_file)
-    print("Data Entry Done")
-
     end_time = time.time()
-
     load_time= end_time - start_time
 
     # st.write(data)
