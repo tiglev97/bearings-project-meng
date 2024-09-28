@@ -27,8 +27,8 @@ if uploaded_file is not None:
 
 
 def delete_files():
-    for file in os.listdir('bearings-project-meng/outputs'):
-        os.remove(os.path.join('bearings-project-meng/outputs', file))
+    for file in os.listdir('outputs'):
+        os.remove(os.path.join('outputs', file))
 
 #if the user clicks the button, delete the files
 if st.button("Clear Files"):

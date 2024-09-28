@@ -4,10 +4,8 @@ import os
 import re
 
 def excel_to_jsonl(folder_path, jsonl_file_path):
-
     try:
         # List all relevant files (csv, xlsx, xml) starting with 'acc'
-
         data_files = [f for f in os.listdir(folder_path) 
                       if (f.startswith('acc') and (f.endswith('.csv') or f.endswith('.xlsx') or f.endswith('.xml')))]
     
@@ -20,13 +18,8 @@ def excel_to_jsonl(folder_path, jsonl_file_path):
             print(f"Error: The file {jsonl_file_path} already exists.")
             return
         
-
-        if not os.path.exists(jsonl_file_path):
-            os.makedirs(jsonl_file_path)  # Create the directory if it does not exist
-
         unique_id = 1  # Initialize a unique ID counter
 
-        
         # Open the output JSONL file for writing
         with open(jsonl_file_path, 'w', encoding='utf-8') as jsonl_file:
             print(f"Converting {len(data_files)} files to JSONL...")
