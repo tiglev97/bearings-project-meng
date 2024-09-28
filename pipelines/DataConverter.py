@@ -1,7 +1,8 @@
 import os
 
 
-def ExtractFolderPath(base_path,output_path):
+def extract_folder_path(base_path,output_path):
+
     folder_path = []
     jsonl_file_path=[]
     for folder in os.listdir(base_path):

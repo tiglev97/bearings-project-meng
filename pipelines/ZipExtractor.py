@@ -2,7 +2,7 @@ import os
 import zipfile
 import tempfile
 
-def ExtractZipFile(zip_file_path):
+def extract_zip_file(zip_file_path):
     try: 
         with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
             temp_dir = tempfile.mkdtemp()

@@ -1,0 +1,2 @@
+streamlit==1.7.0
+zipfile==3.2 
