@@ -5,3 +5,13 @@ Tasks for Sept 18
 Sept 25
 
 -Use FEMO dataset!!!!
+
+Oct.1st/2024
+1. Add Logging File to the system
+2. Feature Engineering
+  - Statistical Feature
+  - Time-domain Feature
+  - Frequency-domain Feature
+  - 1-s2.0-S0888327005001512-main.pdf
+3. Update JSON file key names
+4. Literature study on Variational Autoencoders & Clustering on Time-series dataset
