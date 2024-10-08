@@ -4,6 +4,8 @@ import numpy as np
 import os
 import logging
 
+
+
 def data_checks(df, channel_columns=['channel x', 'channel y']):
     # Verify if the specified columns exist in the DataFrame
     missing_columns = [col for col in channel_columns if col not in df.columns]

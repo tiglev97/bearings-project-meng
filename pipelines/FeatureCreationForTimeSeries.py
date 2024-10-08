@@ -144,23 +144,25 @@ def extract_features(df, channel_columns=['channel x', 'channel y']):
     # Perform data checks before feature extraction
     df = data_checks(df, channel_columns)
     # Extract time-domain features
-    df = time_domain_features(df, channel_columns)
+    time_domain_feature_df = time_domain_features(df, channel_columns)
     # Extract frequency-domain features
-    df = frequency_domain_features(df, channel_columns)
+    frequency_domain_features_df = frequency_domain_features(df, channel_columns)
     # Extract time-frequency domain features
-    df = time_frequency_features(df, channel_columns)
-    return df
+    time_frequency_features_df = time_frequency_features(df, channel_columns)
+    return time_domain_feature_df, frequency_domain_features_df, time_frequency_features_df
 
 # Usage example
 start_time = time.time()
 
+
+        
+
+
 file_path = 'C:/uoft/Meng_project/bearings-project-meng/Streamlit/outputs/Bearing1_1.jsonl'
 df = load_jsonl_to_dataframe(file_path)
 print(df.head())
-df = extract_features(df)
+time_domain_features_df, frequency_domain_features_df, time_frequency_features_df = extract_features(df)
 # Displaying the first few rows of the DataFrame with new features
-print(df.head())
-
 end_time = time.time()
 print(f"Time taken: {end_time - start_time} seconds")
 logging.info(f"Time taken: {end_time - start_time} seconds")
