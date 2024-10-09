@@ -1,10 +1,5 @@
-import json
-import pandas as pd
 import numpy as np
-import os
 import logging
-
-
 
 def data_checks(df, channel_columns=['channel x', 'channel y']):
     # Verify if the specified columns exist in the DataFrame
@@ -16,9 +11,10 @@ def data_checks(df, channel_columns=['channel x', 'channel y']):
     if df.isnull().values.any():
         logging.error("Missing values detected:")
         print("Missing values detected:")
-
+        
         logging.error(df.isnull().sum())
         print(df.isnull().sum())
+        
         # Fill missing values using forward fill
         df.fillna(method='ffill', inplace=True)
     
@@ -29,8 +25,12 @@ def data_checks(df, channel_columns=['channel x', 'channel y']):
         def compute_z_scores(ts):
             ts = np.array(ts)
             return (ts - np.mean(ts)) / np.std(ts)
+        
+        # Compute z-scores and check for anomalies
         df[f'{column}_z_scores'] = df[column].apply(compute_z_scores)
         df[f'{column}_anomalies'] = df[f'{column}_z_scores'].apply(lambda z: np.any(np.abs(z) > threshold))
+        
+        # Log anomalies if detected
         if df[f'{column}_anomalies'].any():
             logging.error(f"Anomalies detected in column '{column}':")
             print(f"Anomalies detected in column '{column}':")
@@ -41,4 +41,5 @@ def data_checks(df, channel_columns=['channel x', 'channel y']):
     df.drop(columns=[f'{column}_z_scores' for column in channel_columns], inplace=True)
     df.drop(columns=[f'{column}_anomalies' for column in channel_columns], inplace=True)
 
+    # Return the updated DataFrame
     return df
