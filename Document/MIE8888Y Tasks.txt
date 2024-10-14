@@ -15,3 +15,13 @@ Oct.1st/2024
   - 1-s2.0-S0888327005001512-main.pdf
 3. Update JSON file key names
 4. Literature study on Variational Autoencoders & Clustering on Time-series dataset
+
+Oct.9th/2024
+1. Add more ideas to the data-check file
+2. Create a doc to keep track of all functions and steps used in data-check and feature-engineering
+3. Formulate a UI to include both data-check and feature-eng (finalize next week)
+4. Build a page template (Check for Dhaval's code)
+  - Navigator
+  - Everything on one page (click and move to the corresponding section)
+  - Styling and Creation
+5. Collect a list of papers about feature-engineering + reference

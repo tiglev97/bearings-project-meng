@@ -7,7 +7,7 @@ from pipelines.ZipExtractor import extract_zip_file
 def data_entry(input):
 
     base_path= extract_zip_file(input)
-    output_path="outputs"
+    output_path="bearings-project-meng\Dataset\outputs"
     folder_path , jsonl_file_path = extract_folder_path(base_path,output_path)
 
 

@@ -5,9 +5,10 @@ import re
 import logging
 
 logging.basicConfig(
-    filename='log.txt',
-    level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    filename='bearings-project-meng/Document/logging/excel_to_json.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filemode='w'  # 'a' for append mode if you prefer
 )
 
 def excel_to_jsonl(folder_path, jsonl_file_path):
@@ -88,7 +89,6 @@ def excel_to_jsonl(folder_path, jsonl_file_path):
                         "bearing": bearing,
                         'split': split_name.capitalize(),
                         'timestamp': f"{row['Hour']}:{row['Minute']}:{row['Second']}",
-                        'millisec': row['Millisec'],
                         'time_series': {
                             "channel x": row['Time Series x'],
                             "channel y": row['Time Series y']
