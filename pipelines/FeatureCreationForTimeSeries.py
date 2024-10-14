@@ -297,13 +297,29 @@ def time_frequency_features(df, channel_columns=['channel_x', 'channel_y']):
     logging.info("Time-frequency domain features extracted successfully.")
     return df
 
-def extract_features(df, channel_columns=['channel_x', 'channel_y']):
-    logging.info("Starting feature extraction process...")
-    time_df = time_domain_features(df, channel_columns)
-    frequencey_df = frequency_domain_features(df, channel_columns)
-    time_frequencey_df = time_frequency_features(df, channel_columns)
-    logging.info("Feature extraction completed.")
-    return 
+# def extract_features(df, channel_columns=['channel_x', 'channel_y']):
+#     logging.info("Starting feature extraction process...")
+#     time_df = time_domain_features(df, channel_columns)
+#     frequencey_df = frequency_domain_features(df, channel_columns)
+#     time_frequencey_df = time_frequency_features(df, channel_columns)
+#     logging.info("Feature extraction completed.")
+#     return 
+# Combine all feature extraction functions
+
+
+
+
+def extract_features(df, channel_columns=['channel x', 'channel y']):
+    # Perform data checks before feature extraction
+    df = data_checks(df, channel_columns)
+    # Extract time-domain features
+    time_domain_feature_df = time_domain_features(df, channel_columns)
+    # # Extract frequency-domain features
+    # frequency_domain_features_df = frequency_domain_features(df, channel_columns)
+    # # Extract time-frequency domain features
+    # time_frequency_features_df = time_frequency_features(df, channel_columns)
+    return time_domain_feature_df
+    # return time_domain_feature_df, frequency_domain_features_df, time_frequency_features_df
 
 
 
