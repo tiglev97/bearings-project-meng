@@ -90,8 +90,8 @@ def excel_to_jsonl(folder_path, jsonl_file_path):
                         'split': split_name.capitalize(),
                         'timestamp': f"{row['Hour']}:{row['Minute']}:{row['Second']}",
                         'time_series': {
-                            "channel x": row['Time Series x'],
-                            "channel y": row['Time Series y']
+                            "channel_x": row['Time Series x'],
+                            "channel_y": row['Time Series y']
                             }
 
                     }
