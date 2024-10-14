@@ -5,7 +5,7 @@ import re
 import logging
 
 logging.basicConfig(
-    filename='bearings-project-meng/Document/logging/excel_to_json.log',
+    filename='log.txt',
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     filemode='w'  # 'a' for append mode if you prefer
