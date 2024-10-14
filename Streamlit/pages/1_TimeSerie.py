@@ -2,7 +2,10 @@ import streamlit as st
 import os 
 import sys
 import time
+import pandas as pd
+import matplotlib.pyplot as plt
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
 from pipelines.DataEntry import data_entry
 
 
