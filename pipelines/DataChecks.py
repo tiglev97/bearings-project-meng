@@ -1,28 +1,73 @@
 import numpy as np
 import logging
+import pandas as pd
+import re
 
 
 
-def data_checks(df, channel_columns=['channel x', 'channel y']):
-    # Verify if the specified columns exist in the DataFrame
+def data_checks(df):
+    """
+    Perform a series of data validation checks on the input dataset (DataFrame).
+    
+    Parameters:
+    df (DataFrame): Input DataFrame to perform data checks.
+    
+    Returns:
+    df (DataFrame): Updated DataFrame after checks (outliers removed).
+    """
+    # Step 1: Check for missing columns
+    channel_columns = ['id', 'identifier', 'bearing', 'split', 'timestamp', 'channel_x', 'channel_y']
     missing_columns = [col for col in channel_columns if col not in df.columns]
     if missing_columns:
+        logging.error(f"The following specified columns are missing in the DataFrame: {missing_columns}")
         raise KeyError(f"The following specified columns are missing in the DataFrame: {missing_columns}")
+    logging.info("Missing Columns check completed.\n")
+
+    # Step 2: Check for missing values
+    missing = df.isnull().sum()
+    logging.info("Missing Values Check:")
+    logging.info(f"\n{missing}\n")
+
+    # Step 3: Check for data type consistency
+    expected_types = {
+        'id': int,
+        'identifier': str,
+        'timestamp': str,
+        'timepoint_index': int,
+        'split': str,
+        'timeseries': dict
+    }
     
-    # Data Check 1: Check for missing values
-    if df.isnull().values.any():
-        logging.error("Missing values detected:")
-        print("Missing values detected:")
-        
-        logging.error(df.isnull().sum())
-        print(df.isnull().sum())
-        
-        # Fill missing values using forward fill
-        df.fillna(method='ffill', inplace=True)
+    # Iterate through each row in the DataFrame and check types
+    for index, row in df.iterrows():
+        for key, expected_type in expected_types.items():
+            if key in row and not isinstance(row[key], expected_type):
+                logging.error(f"Inconsistent type for '{key}' in id {row['id']}: Expected {expected_type}, got {type(row[key])}.")
+                raise TypeError(f"Inconsistent type for '{key}' in id {row['id']}: Expected {expected_type}, got {type(row[key])}.")
+    logging.info("Data type consistency check completed.\n")
+
+    # Step 4: Check for timeseries length consistency
+    for index, row in df.iterrows():
+        if 'timeseries' in row:
+            channels = row['timeseries']
+            lengths = [len(v) for v in channels.values()]
+            if len(set(lengths)) != 1:
+                logging.warning(f"Inconsistent lengths in timeseries for id {row['id']} - {lengths}")
+    logging.info("Timeseries length check completed.\n")
+
+    # Step 5: Check for timestamp format validity (HH:MM:SS format)
+    timestamp_format = re.compile(r"\d{2}:\d{2}:\d{2}")
+    for index, row in df.iterrows():
+        timestamp_str = str(row.get('timestamp', ''))
+        if 'timestamp' in row and not timestamp_format.match(row['timestamp']):
+            logging.warning(f"Invalid timestamp format for id {row['id']} - {row['timestamp']}")
+    logging.info("Timestamp format check completed.\n")
+
     
-    # Data Check 2: Anomaly detection (using z-score)
+    # Step 6: Check and remove outliers (95% confidence interval)
     threshold = 3
-    for column in channel_columns:
+    channels=['channel_x', 'channel_y']
+    for column in channels:
         # Since the data is a list, compute z-scores for each time series
         def compute_z_scores(ts):
             ts = np.array(ts)
@@ -41,7 +86,7 @@ def data_checks(df, channel_columns=['channel x', 'channel y']):
 
         logging.info("Data Consistency check completed.\n")
 
-        # Return the updated DataFrame
+    # Return the updated DataFrame
     return df
 
 

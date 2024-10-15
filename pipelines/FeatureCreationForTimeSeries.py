@@ -311,7 +311,7 @@ def time_frequency_features(df, channel_columns=['channel_x', 'channel_y']):
 
 def extract_features(df, channel_columns=['channel_x', 'channel_y']):
     # Perform data checks before feature extraction
-    df = data_checks(df, channel_columns)
+    #df = data_checks(df, channel_columns)
     # Extract time-domain features
     time_domain_feature_df = time_domain_features(df, channel_columns)
     # # Extract frequency-domain features
