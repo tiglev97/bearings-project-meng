@@ -1,2 +1,3 @@
 streamlit==1.7.0
-zipfile==3.2 
+zipfile==3.2
+pywavelets== 1.5.0
