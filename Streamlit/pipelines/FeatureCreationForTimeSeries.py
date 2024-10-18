@@ -11,6 +11,7 @@ from sklearn.impute import SimpleImputer, KNNImputer
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder, StandardScaler, MinMaxScaler, Normalizer
 
 from pipelines.DataChecks import data_checks
+from Streamlit.pipelines.JsonlConverter import data_frame_to_jsonl
 
 import pandas as pd
 from sklearn.impute import SimpleImputer
@@ -177,20 +178,7 @@ class DataCleanPipeline:
 
         
 
-def load_jsonl_to_dataframe(file_path):
-    logging.info(f"Loading JSONL file from {file_path}...")
-    data = []
-    with open(file_path, 'r') as file:
-        for line in file:
-            record = json.loads(line)
-            if 'time_series' in record:
-                time_series_data = record.pop('time_series')
-                record.update(time_series_data)
-            data.append(record)
-    df = pd.DataFrame(data)
-    
-    logging.info("Available columns in DataFrame: %s", df.columns)
-    return df
+
 
 def time_domain_features(df, channel_columns=['channel_x', 'channel_y']):
     logging.info("Extracting time-domain features...")
@@ -216,6 +204,10 @@ def time_domain_features(df, channel_columns=['channel_x', 'channel_y']):
             logging.error(f"Values in column '{channel}' are not in the expected list format.")
             raise ValueError(f"Values in column '{channel}' are not in the expected list format.")
     logging.info("Time-domain features extracted successfully.")
+
+    # data_frame_to_jsonl(df, 'time_domain_features','Gold')
+    # logging.info("Time-domain features saved to JSONL file at Silver output.")
+
     return df
 
 def frequency_domain_features(df, channel_columns=['channel_x', 'channel_y']):
@@ -259,6 +251,10 @@ def frequency_domain_features(df, channel_columns=['channel_x', 'channel_y']):
             raise ValueError(f"Values in column '{channel}' are not in the expected list format.")
         
     logging.info("Frequency-domain features extracted successfully.")
+
+    # data_frame_to_jsonl(df, 'frequency_domain_features','Gold')
+    # logging.info("Frequency-domain features saved to JSONL file at Silver output.")
+
     return df
 
 def time_frequency_features(df, channel_columns=['channel_x', 'channel_y']):
@@ -295,6 +291,9 @@ def time_frequency_features(df, channel_columns=['channel_x', 'channel_y']):
             raise ValueError(f"Values in column '{channel}' are not in the expected list format.")
         
     logging.info("Time-frequency domain features extracted successfully.")
+
+    # data_frame_to_jsonl(df, 'time_frequency_features','Gold')
+    # logging.info("Time-frequency domain features saved to JSONL file at Silver output.")
     return df
 
 # def extract_features(df, channel_columns=['channel_x', 'channel_y']):

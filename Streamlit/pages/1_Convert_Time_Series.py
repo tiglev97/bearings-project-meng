@@ -8,15 +8,16 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 
 from pipelines.DataEntry import data_entry
 from pipelines.BronzeDataEntry import get_bronze_data_path
-from pipelines.FeatureCreationForTimeSeries import load_jsonl_to_dataframe
+from pipelines.JsonlConverter import jsonl_to_dataframe
 from pipelines.DataChecks import data_checks  # Import the data_checks function
+from pipelines.JsonlConverter import data_frame_to_jsonl
 
 # Set session ID
 st.session_state.session_id = time.time()
 
 # Set page configurations for layout and theme
-st.set_page_config(page_title="Time Series Data Analysis", layout="wide", initial_sidebar_state="expanded")
-
+st.set_page_config(page_title="File Upload", layout="wide", initial_sidebar_state="expanded")
+st.title('⚙️ Data Upload')
 # Customize page style: white background with darker blue accents
 st.markdown(
     """
@@ -25,8 +26,15 @@ st.markdown(
         background-color: white;
         color: #333;
     }
-    .main .block-container {
+    .main { 
         padding: 2rem 2rem;
+    } 
+    
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        padding-left: 5rem;
+        padding-right: 5rem;
     }
     .css-18e3th9 {
         background-color: #002366 !important;
@@ -43,8 +51,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Set page title and description
-st.title('⚙️ Time Series Data Analysis')
 st.markdown("""
     Welcome to the **Time Series Data Analysis** page. Here you can upload a ZIP file containing time series data, 
     convert it to JSONL format, and run data validation checks to ensure the quality of the data.
@@ -99,11 +105,12 @@ if uploaded_file is not None:
             # Load the JSONL file into a DataFrame
             df = []
             for file in json_file_paths:
-                df.append(load_jsonl_to_dataframe(file))
+                df.append(jsonl_to_dataframe(file))
             df = pd.concat(df)
             # Run the data_checks function
             try:
                 checked_df = data_checks(df)  # Using the imported data_checks function
+                data_frame_to_jsonl(checked_df, 'checked_df', 'Silver') #Saving the checked data to Silver folder
                 st.success("✅ Data Checks Completed")
                 
                 # Store the checked DataFrame in session state
@@ -119,8 +126,13 @@ if uploaded_file is not None:
 
 # Function to delete temporary files
 def delete_files():
-    for file in os.listdir('outputs'):
-        os.remove(os.path.join('outputs', file))
+    for file in os.listdir('outputs\\Bronze'):
+        os.remove(os.path.join('outputs\\Bronze', file))
+    for file in os.listdir('outputs\\Silver'):
+        os.remove(os.path.join('outputs\\Silver', file))
+
+    st.session_state.checked_df = None
+
 
 # Button to clear files
 if st.button("🗑️ Clear Temporary Files"):
