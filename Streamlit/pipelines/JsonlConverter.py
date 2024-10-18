@@ -1,8 +1,8 @@
+import os
+import logging
 import pandas as pd
 import json
-import os
 import re
-import logging
 
 logging.basicConfig(
     filename='log.txt',
@@ -10,6 +10,53 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     filemode='w'  # 'a' for append mode if you prefer
 )
+
+def jsonl_to_dataframe(file_path):
+    logging.info(f"Loading JSONL file from {file_path}...")
+    data = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            record = json.loads(line)
+            if 'time_series' in record:
+                time_series_data = record.pop('time_series')
+                record.update(time_series_data)
+            data.append(record)
+    df = pd.DataFrame(data)
+    
+    logging.info("Available columns in DataFrame: %s", df.columns)
+    return df
+
+
+
+
+def data_frame_to_jsonl(df, file_name, output_dir):    
+    # Build the file path
+    jsonl_file_path = os.path.join('outputs',output_dir, f"{file_name}.jsonl")
+    print(jsonl_file_path)
+
+    # Check if the output JSONL file already exists
+    if os.path.exists(jsonl_file_path):
+        logging.error(f"Error: The file {jsonl_file_path} already exists.")
+        print(f"Error: The file {jsonl_file_path} already exists.")
+        return
+
+    # Logging the file save path
+    logging.info(f"Saving DataFrame to JSONL file: {jsonl_file_path}")
+    
+    # Save the DataFrame to JSONL
+    jsonl_data = df.to_json(orient='records', lines=True)
+
+    
+    # Writing to the file
+    with open(jsonl_file_path, 'w') as file:
+        file.write(jsonl_data)
+        print("DataFrame saved to JSONL file successfully.")
+    
+    logging.info("DataFrame saved to JSONL file successfully.")
+    
+
+
+
 
 def excel_to_jsonl(folder_path, jsonl_file_path):
     try:

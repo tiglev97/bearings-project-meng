@@ -2,7 +2,7 @@ import os
 
 def get_bronze_data_path():
     #open the folder and read the contents from C:\uoft\Meng_project\bearings-project-meng\Streamlit\outputs
-    path = 'outputs\\'
+    path = 'outputs\\Bronze\\'
     files = os.listdir(path)
     print(files)
     path_list=[]

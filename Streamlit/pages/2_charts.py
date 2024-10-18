@@ -7,20 +7,13 @@ import matplotlib.pyplot as plt
 
 # Adjust the system path to access your pipelines
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-from pipelines.BronzeDataEntry import get_bronze_data_path
-from pipelines.FeatureCreationForTimeSeries import extract_features, load_jsonl_to_dataframe
-
-# Set session state and check if the DataFrame exists
-if 'checked_df' in st.session_state:
-    df = st.session_state.checked_df  # Retrieve the DataFrame from session state
-else:
-    st.error("No data available. Please run the data checks on the first page.")
-    st.stop()  # Stop further execution if there is no data
+from pipelines.FeatureCreationForTimeSeries import extract_features
+from pipelines.JsonlConverter import jsonl_to_dataframe, data_frame_to_jsonl
 
 # Set page configurations for layout and theme
 st.set_page_config(page_title="Anomaly Detection", layout="wide", initial_sidebar_state="expanded")
-
 # Customize page style: white background with darker blue accents
+st.title('⚙️ Data Analysis')
 st.markdown(
     """
     <style>
@@ -28,8 +21,14 @@ st.markdown(
         background-color: white;
         color: #333;
     }
-    .main .block-container {
+    .main { 
         padding: 2rem 2rem;
+    } 
+    
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+
     }
     .css-18e3th9 {
         background-color: #002366 !important;
@@ -55,13 +54,46 @@ st.sidebar.markdown(
     """
 )
 
+
+# Set session state and check if the DataFrame exists
+if 'checked_df' in st.session_state:
+    df = st.session_state.checked_df  # Retrieve the DataFrame from session state
+elif 'checked_df.jsonl' in os.listdir('outputs\\Silver'):
+    file_path = 'outputs\\Silver\\checked_df.jsonl'
+    loading=st.empty()
+    loading.info("Loading the file...")
+    df = jsonl_to_dataframe(file_path)
+    st.session_state.checked_df = df  # Save the DataFrame to session state
+    loading.empty()
+else:
+    st.error("No data available. Please run the data checks on the first page.")
+    st.stop()  # Stop further execution if there is no data
+
+
+
+
 @st.cache_data()
 def get_features(df):  # Accept df as parameter
     time_domain_features = extract_features(df)
     return time_domain_features
 
 # Extract features
-time_features = get_features(df)
+if 'time_features' not in st.session_state:
+    if 'time_domain_features.jsonl' not in os.listdir('outputs\\Gold'):
+        time_features = get_features(df)
+        st.session_state.time_features = time_features  # Save the features to session state
+        print("Features extracted successfully")
+    else:
+        loading=st.info("Loading the file...")
+        st.session_state.time_features = jsonl_to_dataframe('outputs\\Gold\\time_domain_features.jsonl')
+        loading.empty()
+    time_features = st.session_state.time_features
+
+elif 'time_features' in st.session_state:
+    time_features = st.session_state.time_features
+else:
+    st.error("Please choose your dataset.")
+    st.stop()
 
 # Write out the number of the dataset
 st.write("Number of time features:", len(time_features))
@@ -115,5 +147,16 @@ if submitted and level1_options and level2_options:
 
 end_time = time.time()
 load_time = end_time - start_time
+
+save_to_jsonl = st.button("Save to Json File")
+if save_to_jsonl:
+    reminder=st.info("Saving to Jsonl...")
+    data_frame_to_jsonl(time_features, 'time_domain_features','Gold')
+    # data_frame_to_jsonl('frequency_domain_features', 'frequency_domain_features', 'Gold')
+    # data_frame_to_jsonl('time_frequency_features', 'time_frequency_features', 'Gold')
+
+    # Display success and remove info message
+    reminder.empty()
+    st.success("✅ Data saved to JSONL file at Gold output.")
 
 st.write(f"Time to load the file: {load_time:.2f} seconds")
