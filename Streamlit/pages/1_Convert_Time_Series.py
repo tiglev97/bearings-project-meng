@@ -277,10 +277,12 @@ if uploaded_file is not None:
                     if 'time_domain_features.jsonl' not in os.listdir('outputs\\Gold'):
                         time_features = extract_features_from_cleaned_data(cleaned_df)
                         data_frame_to_jsonl(time_features, 'time_domain_features', 'Gold')  # Save extracted features
+                        st.session_state.time_features = time_features
                         st.write("Features extracted successfully")
                     else:
                         loading = st.info("Loading the file...")
                         time_features = jsonl_to_dataframe('outputs\\Gold\\time_domain_features.jsonl')
+                        st.session_state.time_features = time_features
                         loading.empty()
 
                     st.write("Number of time features:", len(time_features))

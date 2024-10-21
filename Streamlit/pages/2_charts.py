@@ -56,14 +56,14 @@ st.sidebar.markdown(
 
 
 # Set session state and check if the DataFrame exists
-if 'checked_df' in st.session_state:
-    df = st.session_state.checked_df  # Retrieve the DataFrame from session state
-elif 'checked_df.jsonl' in os.listdir('outputs\\Silver'):
-    file_path = 'outputs\\Silver\\checked_df.jsonl'
+if 'time_features' in st.session_state:
+    df = st.session_state.time_features  # Retrieve the DataFrame from session state
+elif 'time_domain_features.jsonl' in os.listdir('outputs\\Gold'):
+    file_path = 'outputs\\Gold\\time_domain_features.jsonl'
     loading=st.empty()
     loading.info("Loading the file...")
     df = jsonl_to_dataframe(file_path)
-    st.session_state.checked_df = df  # Save the DataFrame to session state
+    st.session_state.time_features = df  # Save the DataFrame to session state
     loading.empty()
 else:
     st.error("No data available. Please run the data checks on the first page.")
@@ -96,8 +96,8 @@ with st.form("selection_form"):
             y_axis = filtered_df.iloc[0]['channel_y']
             y_zscore = filtered_df.iloc[0]['channel_y_z_scores']
 
-            identifiers = ['id', 'identifier', 'bearing', 'split', 'timestamp', 'channel_x', 'channel_y', 'channel_x_z_scores', 'channel_y_z_scores']
-            filtered_df = filtered_df.drop(columns=identifiers)
+            #identifiers = ['identifier', 'bearing', 'split', 'timestamp', 'channel_x', 'channel_y', 'channel_x_z_scores', 'channel_y_z_scores']
+            #filtered_df = filtered_df.drop(columns=identifiers)
 
     # Submit button for the form
     submitted = st.form_submit_button("Submit")
