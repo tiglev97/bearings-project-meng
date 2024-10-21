@@ -161,7 +161,7 @@ class DataCleanPipeline:
 
         for col in categorical_cols:
             # Skip columns that are in target_column
-            if col in target_column or col == 'timestamp':
+            if col in target_column or col == 'timestamp' or col == 'identifier':
                 logging.info(f"Skipping encoding for column: {col}.")
                 continue
             
@@ -171,7 +171,7 @@ class DataCleanPipeline:
 
             # Apply encoding based on the number of unique values
             if len(df_encoded[col].unique()) > 2:  # Apply one-hot encoding for multi-class columns
-                df_encoded = pd.get_dummies(df_encoded, columns=[col], prefix=col, drop_first=True)
+                df_encoded = pd.get_dummies(df_encoded, columns=[col], prefix=col, drop_first=False)
                 logging.info(f"One-hot encoding applied to column: {col}.")
             else:
                 le = LabelEncoder()
@@ -234,6 +234,9 @@ class DataCleanPipeline:
 
         logging.info("Encoding categorical columns.")
         self.encode_categorical_columns(target_column=target_column)
+
+        self.outlier_removal()
+        logging.info("Outlier Removal completed.\n")
 
         self.df = self.df.set_index('id', drop=True)  # Set 'id' as the index and drop the column
         logging.info("Data cleaning pipeline completed.\n")
