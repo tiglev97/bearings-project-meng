@@ -63,31 +63,9 @@ def data_checks(df):
             logging.warning(f"Invalid timestamp format for id {row['id']} - {row['timestamp']}")
     logging.info("Timestamp format check completed.\n")
 
-    
-    # Step 6: Check and remove outliers (95% confidence interval)
-    threshold = 3
-    channels=['channel_x', 'channel_y']
-    for column in channels:
-        # Since the data is a list, compute z-scores for each time series
-        def compute_z_scores(ts):
-            ts = np.array(ts)
-            return (ts - np.mean(ts)) / np.std(ts)
-        
-        # Compute z-scores and check for anomalies
-        df[f'{column}_z_scores'] = df[column].apply(compute_z_scores)
-        df[f'{column}_anomalies'] = df[f'{column}_z_scores'].apply(lambda z: np.any(np.abs(z) > threshold))
-        
-        # Log anomalies if detected
-        if df[f'{column}_anomalies'].any():
-            logging.error(f"Anomalies detected in column '{column}':")
-            print(f"Anomalies detected in column '{column}':")
-            logging.error(df[df[f'{column}_anomalies']])
-            print(df[df[f'{column}_anomalies']])
-
-        logging.info("Data Consistency check completed.\n")
-
-    # Return the updated DataFrame
     return df
+    
+    
 
 
 # class DataCheckPipeline:

@@ -13,6 +13,7 @@ from sklearn.preprocessing import OneHotEncoder, LabelEncoder, StandardScaler, M
 from pipelines.DataChecks import data_checks
 from Streamlit.pipelines.JsonlConverter import data_frame_to_jsonl
 
+
 import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer, LabelEncoder
@@ -25,44 +26,78 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class DataCleanPipeline:
     def __init__(self, data):
-        self.data = data
-        self.df = pd.DataFrame(data)
+        self.df = data.copy()  # Ensure a copy is made to prevent altering the original data
         logging.info("Pipeline initialized with data.")
+
+    def regulate_column_types(self):
+        logging.info("Regulating column types.")
+        
+        # Define the desired types, excluding the list columns from being processed by astype()
+        desired_types = {
+            'id': 'int64',
+            'identifier': 'object',
+            'bearing': 'object',
+            'split': 'object',
+        }
+        
+        # Convert columns to the desired types using astype()
+        for column, dtype in desired_types.items():
+            if column in self.df.columns:
+                if dtype == 'datetime64[ns]':
+                    # Convert 'timestamp' with specific format
+                    logging.info(f"Converting column '{column}' to datetime format.")
+                    self.df[column] = pd.to_datetime(self.df[column], format='%H:%M:%S', errors='coerce')
+                else:
+                    # Convert other columns to the desired types
+                    self.df[column] = self.df[column].astype(dtype, errors='ignore')
+                logging.info(f"Column '{column}' converted to type '{dtype}'.")
+            else:
+                logging.warning(f"Column '{column}' not found in DataFrame. Skipping type regulation.")
+        
+        logging.info("Column type regulation completed.")
+        return self.df
 
     # Missing Value Imputation
     def preprocess_data(self, strategy, target_column):
         logging.info(f"Starting missing value imputation with strategy: {strategy}.")
-        df_cleaned = self.df.copy()  # Start with a copy of the original DataFrame
+        df_cleaned = self.df.copy()  # Initialize df_cleaned properly
 
-        # Exclude the target column from processing
-        df_without_target = df_cleaned.drop(columns=[target_column])
+        if not isinstance(target_column, list):
+            target_column = [target_column]
+
+        if not all(col in df_cleaned.columns for col in target_column):
+            logging.error(f"Target column '{target_column}' not found in data.")
+            raise ValueError(f"Target column '{target_column}' not found in data.")
 
         if strategy == 'Drop Missing Values':
             df_cleaned = df_cleaned.dropna()
             logging.info(f"Dropped rows with missing values. Remaining rows: {df_cleaned.shape[0]}.")
-            
+
         elif strategy in ['Mean Imputation', 'Median Imputation']:
-            # Check for numeric columns only
-            numeric_cols = df_without_target.select_dtypes(include=['float64', 'int64']).columns
+            numeric_cols = df_cleaned.select_dtypes(include=['float64', 'int64']).columns
             if len(numeric_cols) > 0:
                 imputer = SimpleImputer(strategy=strategy.split()[0].lower())
-                df_cleaned[numeric_cols] = imputer.fit_transform(df_without_target[numeric_cols])
+                df_cleaned[numeric_cols] = imputer.fit_transform(df_cleaned[numeric_cols])
                 logging.info(f"Performed {strategy.lower()} for numeric columns.")
-            
-            # Impute for categorical columns
-            categorical_cols = df_without_target.select_dtypes(include=['object']).columns
+            else:
+                logging.warning("No numeric columns found for mean/median imputation.")
+
+            categorical_cols = df_cleaned.select_dtypes(include=['object']).columns
             if len(categorical_cols) > 0:
                 imputer = SimpleImputer(strategy='most_frequent')
-                df_cleaned[categorical_cols] = imputer.fit_transform(df_without_target[categorical_cols])
+                df_cleaned[categorical_cols] = imputer.fit_transform(df_cleaned[categorical_cols])
                 logging.info("Performed most frequent imputation for categorical columns.")
+            else:
+                logging.warning("No categorical columns found for imputation.")
 
         elif strategy == 'Mode Imputation':
-            # Apply mode imputation to categorical columns
-            categorical_cols = df_without_target.select_dtypes(include=['object']).columns
+            categorical_cols = df_cleaned.select_dtypes(include=['object']).columns
             if len(categorical_cols) > 0:
                 imputer = SimpleImputer(strategy='most_frequent')
-                df_cleaned[categorical_cols] = imputer.fit_transform(df_without_target[categorical_cols])
+                df_cleaned[categorical_cols] = imputer.fit_transform(df_cleaned[categorical_cols])
                 logging.info("Performed mode imputation for categorical columns.")
+            else:
+                logging.warning("No categorical columns found for mode imputation.")
 
         elif strategy == 'Forward Fill':
             df_cleaned = df_cleaned.fillna(method='ffill')
@@ -72,70 +107,77 @@ class DataCleanPipeline:
             df_cleaned = df_cleaned.fillna(method='bfill')
             logging.info("Performed backward fill for missing values.")
 
+        else:
+            logging.error(f"Invalid strategy: {strategy}. Choose a valid strategy.")
+            raise ValueError(f"Invalid strategy: {strategy}. Valid strategies are: 'Drop Missing Values', 'Mean Imputation', 'Median Imputation', 'Mode Imputation', 'Forward Fill', 'Backward Fill'.")
+
+        self.df[target_column] = df_cleaned[target_column]
         self.df = df_cleaned
         logging.info("Missing value imputation completed.\n")
         return df_cleaned
 
-    # Scaling the data (Normalization or Standardization)
+    # Scaling the data (Normalization or Standardization) for nested entries
     def scale_data(self, scaling_method, target_column):
         logging.info(f"Starting scaling with method: {scaling_method}.")
-        df_cleaned = self.df.copy()  # Ensure a fresh copy for scaling
-        
-        # Select numerical columns
-        numeric_cols = df_cleaned.select_dtypes(include=['float64', 'int64']).columns
-        
-        # Exclude binary, one-hot encoded, and target columns
-        binary_cols = df_cleaned.columns[df_cleaned.nunique() <= 2].tolist()  # Binary columns
-        numeric_cols = [col for col in numeric_cols if col not in binary_cols and col != target_column]
+        df_cleaned = self.df.copy()
 
-        if not numeric_cols:
-            warnings.warn("No numerical columns to scale.")
-            logging.info("No numerical columns available for scaling.")
-            return df_cleaned  # Return the original df if no suitable numerical columns
+        if not isinstance(target_column, list):
+            target_column = [target_column]
 
-        # Apply the selected scaling method
-        if scaling_method == 'Standard Scaler':
-            scaler = StandardScaler()
-            df_cleaned[numeric_cols] = scaler.fit_transform(df_cleaned[numeric_cols])
-            logging.info("Standard scaling applied to numerical columns.")
-        elif scaling_method == 'Min-Max Scaler':
-            scaler = MinMaxScaler()
-            df_cleaned[numeric_cols] = scaler.fit_transform(df_cleaned[numeric_cols])
-            logging.info("Min-Max scaling applied to numerical columns.")
-        elif scaling_method == 'Normalizer':
-            scaler = Normalizer()
-            df_cleaned[numeric_cols] = scaler.fit_transform(df_cleaned[numeric_cols])
-            logging.info("Normalizer applied to numerical columns.")
-    
+        for column in target_column:
+            logging.info(f"Scaling column: {column}.")
+
+            # Define a function to apply scaling to each nested entry (list/array)
+            def scale_entry(entry):
+                entry = np.array(entry).reshape(-1, 1)  # Reshape to 2D array for sklearn
+                if scaling_method == 'Standard Scaler':
+                    scaler = StandardScaler()
+                elif scaling_method == 'Min-Max Scaler':
+                    scaler = MinMaxScaler()
+                elif scaling_method == 'Normalizer':
+                    scaler = Normalizer()
+                else:
+                    logging.error(f"Invalid scaling method: {scaling_method}.")
+                    raise ValueError(f"Invalid scaling method: {scaling_method}. Valid options are 'Standard Scaler', 'Min-Max Scaler', 'Normalizer'.")
+                
+                scaled_entry = scaler.fit_transform(entry).flatten()  # Flatten back to 1D after scaling
+                return scaled_entry.tolist()  # Convert to list to ensure list format is maintained
+
+            # Apply scaling to each entry in the target column
+            df_cleaned[column] = df_cleaned[column].apply(scale_entry)
+            logging.info(f"Scaling applied to column: {column} using {scaling_method}.")
+
         self.df = df_cleaned
         logging.info("Scaling completed.\n")
         return df_cleaned
-    
+
     # Encoding categorical columns
     def encode_categorical_columns(self, target_column):
-        logging.info(f"Starting encoding of categorical columns, target column: {target_column}.")
-        df_encoded = self.df.copy()  # Avoid modifying the original
+        logging.info("Starting encoding of categorical columns.")
+        df_encoded = self.df.copy()
 
-        # Identify categorical columns, excluding the target column
+        # Identify categorical columns
         categorical_cols = df_encoded.select_dtypes(include=['object', 'category']).columns
-        
+
         for col in categorical_cols:
-            if col == target_column:
-                # Label encoding for the target column
-                le = LabelEncoder()
-                df_encoded[col] = le.fit_transform(df_encoded[col])
-                logging.info(f"Label encoding applied to target column: {col}.")
+            # Skip columns that are in target_column
+            if col in target_column or col == 'timestamp':
+                logging.info(f"Skipping encoding for column: {col}.")
+                continue
+            
+            # Check if column entries are lists or arrays and flatten them
+            if df_encoded[col].apply(lambda x: isinstance(x, (list, np.ndarray))).any():
+                df_encoded[col] = df_encoded[col].apply(lambda x: x[0] if isinstance(x, (list, np.ndarray)) and len(x) > 0 else None)
+
+            # Apply encoding based on the number of unique values
+            if len(df_encoded[col].unique()) > 2:  # Apply one-hot encoding for multi-class columns
+                df_encoded = pd.get_dummies(df_encoded, columns=[col], prefix=col, drop_first=True)
+                logging.info(f"One-hot encoding applied to column: {col}.")
             else:
-                if len(df_encoded[col].unique()) > 2:  # More than 2 unique values
-                    # One-Hot Encoding
-                    df_encoded = pd.get_dummies(df_encoded, columns=[col], prefix=col, drop_first=True)
-                    logging.info(f"One-hot encoding applied to column: {col}.")
-                else:
-                    # Label encoding for binary categorical columns
-                    le = LabelEncoder()
-                    df_encoded[col] = le.fit_transform(df_encoded[col])
-                    logging.info(f"Label encoding applied to column: {col}.")
-        
+                le = LabelEncoder()
+                df_encoded[col] = le.fit_transform(df_encoded[col].astype(str))  # Ensure all entries are strings
+                logging.info(f"Label encoding applied to column: {col}.")
+
         self.df = df_encoded
         logging.info("Categorical encoding completed.\n")
         return df_encoded
@@ -144,45 +186,65 @@ class DataCleanPipeline:
     def check_missing_columns(self):
         logging.info("Checking for missing columns.")
         missing_data = self.df.isnull().sum()
-        missing_columns = missing_data[missing_data > 0]  # Return columns with missing data
+        missing_columns = missing_data[missing_data > 0]
         if not missing_columns.empty:
             logging.info(f"Missing values detected in columns:\n{missing_columns}")
         else:
             logging.info("No missing values detected.")
         return missing_columns
 
+    # Outlier removal using z-scores
+    def outlier_removal(self):
+        logging.info("Starting outlier removal.")
+        threshold = 3
+        channels = ['channel_x', 'channel_y']
+        for column in channels:
+            def compute_z_scores(ts):
+                ts = np.array(ts)
+                return (ts - np.mean(ts)) / np.std(ts)
+
+            self.df[f'{column}_z_scores'] = self.df[column].apply(compute_z_scores)
+            self.df[f'{column}_anomalies'] = self.df[f'{column}_z_scores'].apply(lambda z: np.any(np.abs(z) > threshold))
+
+            if self.df[f'{column}_anomalies'].any():
+                logging.error(f"Anomalies detected in column '{column}':")
+                logging.error(self.df[self.df[f'{column}_anomalies']])
+
+            logging.info(f"Outlier removal completed for column: {column}.\n")
+
+        return self.df
+
     # Running the full pipeline
     def run_pipeline(self, missing_value_strategy, scaling_method, target_column):
-        # Step 1: Check for missing values
         logging.info("Starting data cleaning pipeline.")
+
+        self.regulate_column_types()
+        logging.info(f"Regulate column types.")
+
         missing_columns = self.check_missing_columns()
         if not missing_columns.empty:
             print("Missing columns before imputation:")
             print(missing_columns)
-        
-        # Step 2: Handle missing values based on the chosen strategy
+
         logging.info(f"Handling missing values using strategy: {missing_value_strategy}.")
         self.preprocess_data(strategy=missing_value_strategy, target_column=target_column)
 
-        # Step 3: Scale the numerical data
         logging.info(f"Scaling data using method: {scaling_method}.")
         self.scale_data(scaling_method=scaling_method, target_column=target_column)
 
-        # Step 4: Encode categorical columns
         logging.info("Encoding categorical columns.")
         self.encode_categorical_columns(target_column=target_column)
 
+        self.df = self.df.set_index('id', drop=True)  # Set 'id' as the index and drop the column
         logging.info("Data cleaning pipeline completed.\n")
-        # Final DataFrame after the pipeline is run
         return self.df
 
-        
-
-
-
+### Feature Engineering Code
 def time_domain_features(df, channel_columns=['channel_x', 'channel_y']):
     logging.info("Extracting time-domain features...")
+
     for channel in channel_columns:
+
         if df[channel].apply(lambda x: isinstance(x, list)).all():
             df[f'{channel}_mean'] = df[channel].apply(np.mean)
             df[f'{channel}_median'] = df[channel].apply(np.median)
@@ -204,11 +266,10 @@ def time_domain_features(df, channel_columns=['channel_x', 'channel_y']):
             logging.error(f"Values in column '{channel}' are not in the expected list format.")
             raise ValueError(f"Values in column '{channel}' are not in the expected list format.")
     logging.info("Time-domain features extracted successfully.")
+    return df
 
     # data_frame_to_jsonl(df, 'time_domain_features','Gold')
     # logging.info("Time-domain features saved to JSONL file at Silver output.")
-
-    return df
 
 def frequency_domain_features(df, channel_columns=['channel_x', 'channel_y']):
     logging.info("Extracting frequency-domain features...")
@@ -313,6 +374,7 @@ def extract_features(df, channel_columns=['channel_x', 'channel_y']):
     #df = data_checks(df, channel_columns)
     # Extract time-domain features
     time_domain_feature_df = time_domain_features(df, channel_columns)
+    print('time------------feature------in--------func',time_domain_feature_df)
     # # Extract frequency-domain features
     # frequency_domain_features_df = frequency_domain_features(df, channel_columns)
     # # Extract time-frequency domain features
