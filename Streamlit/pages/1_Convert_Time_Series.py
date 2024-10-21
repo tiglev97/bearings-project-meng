@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
@@ -10,7 +11,12 @@ from pipelines.DataEntry import data_entry
 from pipelines.BronzeDataEntry import get_bronze_data_path
 from pipelines.JsonlConverter import jsonl_to_dataframe
 from pipelines.DataChecks import data_checks  # Import the data_checks function
-from pipelines.JsonlConverter import data_frame_to_jsonl
+from pipelines.FeatureCreationForTimeSeries import DataCleanPipeline
+from pipelines.FeatureCreationForTimeSeries import extract_features
+from pipelines.JsonlConverter import jsonl_to_dataframe, data_frame_to_jsonl
+
+import warnings
+warnings.filterwarnings("ignore")
 
 # Set session ID
 st.session_state.session_id = time.time()
@@ -64,10 +70,7 @@ st.sidebar.markdown(
     Perform data analysis and anomaly detection on your time series data using our tools.
     """
 )
-
-# Upload ZIP file
-uploaded_file = st.file_uploader("📂 Choose a ZIP file", type="zip")
-
+@st.cache_data()
 # Function to process ZIP file using data_entry
 def process_zip_file(zip_file):
     try:
@@ -86,43 +89,206 @@ def process_zip_file(zip_file):
         st.error(f"⚠️ Failed to process the ZIP file: {str(e)}")
         return None
 
+@st.cache_data()
+def run_data_checks(json_file_paths):
+    log_messages = []  # Initialize a list to store log messages
+    checks = [
+        "Missing Column Validation",
+        "Missing Value Validation",
+        "Data Type Validation",
+        "Consistency of Time-Series Length",
+        "Timestamp Format Validation",
+        "Duplicate Removal",
+        "Outlier Detection"
+    ]
+
+    df = []
+    for file in json_file_paths:
+        df.append(jsonl_to_dataframe(file))
+    df = pd.concat(df)
+
+    # Display the list of checks
+    for check in checks:
+        # Show the check with a loading sign
+        check_message = f"{check}... ⏳"
+        log_messages.append(check_message)
+        check_placeholder = st.empty()  # Create a placeholder for the loading message
+        check_placeholder.write(check_message)
+
+        # Simulate running the checks (replace with your actual validation logic)
+        time.sleep(np.random.uniform(low=0.1, high=0.5))  # Simulating time taken for each check
+        # Update the message to indicate completion
+        completion_message = f"{check}... ✅"
+        log_messages.append(completion_message)
+        check_placeholder.write(completion_message)  # Update the placeholder with completion message
+
+    # Run the actual data validation checks here
+    try:
+        checked_df = data_checks(df)  # Using the imported data_checks function
+        data_frame_to_jsonl(checked_df, 'checked_df', 'Silver')  # Saving the checked data to Silver folder
+    except Exception as e:
+        st.error(f"⚠️ Error during data checks: {str(e)}")
+
+    return checked_df
+
+
+@st.cache_data()
+def run_data_cleaning(checked_df, missing_value_strategy, scaling_method):
+    log_messages = []  # Initialize a list to store log messages
+    cleaning_steps = [
+        "Column Type Regulation",
+        "Missing Value Imputation",
+        "Normalization",
+        "Label Encoding",
+        "Outlier Removal"
+    ]
+
+    # Display the list of data cleaning steps
+    for step in cleaning_steps:
+        # Show the cleaning step with a loading sign
+        cleaning_message = f"{step}... ⏳"
+        log_messages.append(cleaning_message)
+        cleaning_placeholder = st.empty()  # Create a placeholder for the loading message
+        cleaning_placeholder.write(cleaning_message)
+
+        # Simulate running the cleaning steps (replace with your actual logic)
+        time.sleep(np.random.uniform(low=0.1, high=0.5))  # Simulating time taken for each step
+        # Update the message to indicate completion
+        completion_message = f"{step}... ✅"
+        log_messages.append(completion_message)
+        cleaning_placeholder.write(completion_message)  # Update the placeholder with completion message
+
+    # Now perform the actual data cleaning
+    target_column = ['channel_x', 'channel_y']
+    pipeline = DataCleanPipeline(checked_df)
+    cleaned_data = pipeline.run_pipeline(missing_value_strategy, scaling_method, target_column)
+    
+    # Display the cleaned data
+    st.write("Cleaned Data:")
+    st.dataframe(cleaned_data.head()) 
+    
+    return cleaned_data
+
+
+@st.cache_data()
+def extract_features_from_cleaned_data(cleaned_df):
+    log_messages = []  # Initialize a list to store log messages
+    feature_extraction_steps = [
+        "Extracting Time-Domain Features"
+    ]
+
+    # Display the list of feature extraction steps
+    for step in feature_extraction_steps:
+        # Show the feature extraction step with a loading sign
+        feature_message = f"Extracting {step}... ⏳"
+        log_messages.append(feature_message)
+        feature_placeholder = st.empty()  # Create a placeholder for the loading message
+        feature_placeholder.write(feature_message)
+
+        # Simulate running the extraction (replace with your actual logic)
+        time.sleep(np.random.uniform(low=0.1, high=0.5))  # Simulating time taken for each step
+        
+        # Update the message to indicate completion
+        completion_message = f"Extracting {step}... ✅"
+        log_messages.append(completion_message)
+        feature_placeholder.write(completion_message)  # Update the placeholder with completion message
+
+    # Perform actual feature extraction
+    time_domain_features = extract_features(cleaned_df)
+    log_messages.append("Feature extraction completed successfully.")
+    
+    return time_domain_features
+
+
+#st.title("AUTO ML")
+
+# Upload ZIP file
+uploaded_file = st.file_uploader("📂 Choose a ZIP file", type="zip")
+
 # If a ZIP file is uploaded
 if uploaded_file is not None:
-    st.info('🕒 Processing the uploaded ZIP file... Please wait.')
-    
-    # Track time taken to process
+    upload_info = st.empty()
+    upload_info.info('🕒 Processing the uploaded ZIP file... Please wait.')
+
+    # Track time taken to process ZIP file
     start_time = time.time()
     
     # Process the ZIP file and get the output JSON path
     json_file_paths = process_zip_file(uploaded_file)
+    end_time = time.time()
+    
     if json_file_paths:
-        end_time = time.time()
         load_time = end_time - start_time
-        st.success(f"✅ ZIP file processed and converted to JSONL in {load_time:.2f} seconds")
-        
-        # Add button to trigger data checks
-        if st.button("🔍 Run Data Checks"):
-            # Load the JSONL file into a DataFrame
-            df = []
-            for file in json_file_paths:
-                df.append(jsonl_to_dataframe(file))
-            df = pd.concat(df)
-            # Run the data_checks function
-            try:
-                checked_df = data_checks(df)  # Using the imported data_checks function
-                data_frame_to_jsonl(checked_df, 'checked_df', 'Silver') #Saving the checked data to Silver folder
-                st.success("✅ Data Checks Completed")
-                
-                # Store the checked DataFrame in session state
-                st.session_state.checked_df = checked_df
-                
-                # Display missing values check output
-                st.subheader("📊 Missing Values Information")
-                missing_values = checked_df.isnull().sum()
-                st.write(missing_values)
+        upload_info.success(f"✅ ZIP file processed in {load_time:.2f} seconds")
 
-            except Exception as e:
-                st.error(f"⚠️ Error during data checks: {str(e)}")
+        # Run data checks and track the time
+        data_checks_start = time.time()
+        checked_df = run_data_checks(json_file_paths)
+        data_frame_to_jsonl(checked_df, 'checked_df', 'Silver') #Saving the checked data to Silver folder
+        # Store the checked DataFrame in session state
+        st.session_state.checked_df = checked_df
+        data_checks_end = time.time()
+
+        if checked_df is not None:
+            data_checks_time = data_checks_end - data_checks_start
+            st.success(f"✅ Data Checks completed in {data_checks_time:.2f} seconds")
+
+            # Create a form for user input for data cleaning
+            with st.form("data_cleaning_form"):
+                st.subheader("Configure Data Cleaning Settings")
+
+                # Dropdown for missing value strategy
+                missing_value_strategy = st.selectbox(
+                    'Select Missing Value Strategy:', 
+                    ['Drop Missing Values', 'Mean Imputation', 'Median Imputation', 'Mode Imputation', 'Forward Fill', 'Backward Fill']
+                )
+
+                # Dropdown for scaling method
+                scaling_method = st.selectbox(
+                    'Select Scaling Method:', 
+                    ['Standard Scaler', 'Min-Max Scaler', 'Normalizer']
+                )
+
+                # Submit button for the form
+                submitted = st.form_submit_button("Submit")
+
+                # If the form is submitted
+                if submitted:
+                    # Clean the data directly without using session state
+                    cleaned_df = run_data_cleaning(checked_df, missing_value_strategy, scaling_method)
+                    data_frame_to_jsonl(cleaned_df, 'cleaned_df', 'Silver')
+                    # Store the cleaned DataFrame in session state
+                    st.session_state.cleaned_df = cleaned_df
+
+                    if 'cleaned_df' in st.session_state:
+                        cleaned_df = st.session_state.cleaned_df
+                    elif 'cleaned_df.json1' in os.listdir('outputs\\Silver'):
+                        file_path = 'outputs\\Silver\\cleaned_df.json1'
+                        loading = st.empty()
+                        loading.info("Loading the file...")
+                        cleaned_df = jsonl_to_dataframe(file_path)
+                        st.session_state.cleaned_df = cleaned_df
+                        loading.empty()
+                    else:
+                        st.error("No data avaliable. Please upload the file first")
+                        st.stop()
+
+                    # Extract features directly from cleaned_df
+                    if 'time_domain_features.jsonl' not in os.listdir('outputs\\Gold'):
+                        time_features = extract_features_from_cleaned_data(cleaned_df)
+                        data_frame_to_jsonl(time_features, 'time_domain_features', 'Gold')  # Save extracted features
+                        st.write("Features extracted successfully")
+                    else:
+                        loading = st.info("Loading the file...")
+                        time_features = jsonl_to_dataframe('outputs\\Gold\\time_domain_features.jsonl')
+                        loading.empty()
+
+                    st.write("Number of time features:", len(time_features))
+                    st.write(time_features.head())
+                    st.write("Features extracted successfully")
+
+
+
 
 # Function to delete temporary files
 def delete_files():

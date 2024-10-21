@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 # Adjust the system path to access your pipelines
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-from pipelines.FeatureCreationForTimeSeries import extract_features
+
 from pipelines.JsonlConverter import jsonl_to_dataframe, data_frame_to_jsonl
 
 # Set page configurations for layout and theme
@@ -72,36 +72,11 @@ else:
 
 
 
-@st.cache_data()
-def get_features(df):  # Accept df as parameter
-    time_domain_features = extract_features(df)
-    return time_domain_features
 
-# Extract features
-if 'time_features' not in st.session_state:
-    if 'time_domain_features.jsonl' not in os.listdir('outputs\\Gold'):
-        time_features = get_features(df)
-        st.session_state.time_features = time_features  # Save the features to session state
-        print("Features extracted successfully")
-    else:
-        loading=st.info("Loading the file...")
-        st.session_state.time_features = jsonl_to_dataframe('outputs\\Gold\\time_domain_features.jsonl')
-        loading.empty()
-    time_features = st.session_state.time_features
-
-elif 'time_features' in st.session_state:
-    time_features = st.session_state.time_features
-else:
-    st.error("Please choose your dataset.")
-    st.stop()
-
-# Write out the number of the dataset
-st.write("Number of time features:", len(time_features))
-st.write(time_features.head())
-st.write("Features extracted successfully")
 
 start_time = time.time()
 # Create a form for user input
+time_features = st.session_state.time_features
 with st.form("selection_form"):
     # Selectbox for level 1 (identifier)
     level1_options = st.selectbox('Select Level 1 (identifier):', time_features['identifier'].unique())
