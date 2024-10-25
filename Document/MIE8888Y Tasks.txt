@@ -25,3 +25,13 @@ Oct.9th/2024
   - Everything on one page (click and move to the corresponding section)
   - Styling and Creation
 5. Collect a list of papers about feature-engineering + reference
+
+Oct.25th/2024
+1. Prof Meeting: Wed Oct.30th/2024 3-3:30 pm
+2. Add fft , Stft, and wavelet display to the chart. Based on channels x and y
+3. Study Pipeline:
+    - Time: Traditional Clustering
+4. Study the reference code for stft and fft.
+    - Find the sampling frequency and number of samples from the paper
+    - Make sure to save the matrix in local files for future usage.
+    - Study cwt to plot wavelet
