@@ -62,6 +62,7 @@ elif 'time_domain_features.jsonl' in os.listdir('outputs\\Gold'):
 
     time_features_file_path = 'outputs\\Gold\\time_domain_features.jsonl'
     frequency_features_file_path = 'outputs\\Gold\\frequency_domain_features.jsonl'
+    time_frequency_features_file_path = 'outputs\\Gold\\time_frequency_features.jsonl'
 
     loading=st.empty()
     loading.info("Loading the file...")
@@ -72,6 +73,9 @@ elif 'time_domain_features.jsonl' in os.listdir('outputs\\Gold'):
     frequency_features_df = jsonl_to_dataframe(frequency_features_file_path)
     st.session_state.frequency_features = frequency_features_df  # Save the DataFrame to session state
 
+    time_frequency_features_df = jsonl_to_dataframe(time_frequency_features_file_path)
+    st.session_state.time_frequency_features = time_frequency_features_df  # Save the DataFrame to session state
+    
     loading.empty()
 else:
     st.error("No data available. Please run the data checks on the first page.")
@@ -83,9 +87,11 @@ else:
 
 
 start_time = time.time()
+
 # Create a form for user input
 time_features = st.session_state.time_features
 frequency_features=st.session_state.frequency_features
+time_frequency_features=st.session_state.time_frequency_features
 
 with st.form("selection_form"):
     # Selectbox for level 1 (identifier)
@@ -95,23 +101,34 @@ with st.form("selection_form"):
     if level1_options:
         time_features_filtered_df = time_features[time_features['identifier'] == level1_options]
         frequency_features_filtered_df = frequency_features[frequency_features['identifier'] == level1_options]
+        time_frequency_features_filtered_df = time_frequency_features[time_features_filtered_df['identifier'] == level1_options]
 
         # Selectbox for level 2 (timestamp)
         level2_options = st.selectbox('Select Level 2 (timestamp):', time_features_filtered_df['timestamp'].unique())
 
         if level2_options:
             time_features_filtered_df = time_features_filtered_df[time_features_filtered_df['timestamp'] == level2_options]
-            
+            frequency_features_filtered_df = frequency_features_filtered_df[frequency_features_filtered_df['timestamp'] == level2_options]
+            time_frequency_features_filtered_df = time_frequency_features_filtered_df[time_frequency_features_filtered_df['timestamp'] == level2_options]
 
             x_axis_time_series = time_features_filtered_df.iloc[0]['channel_x']
-            # x_zscore = time_features_filtered_df.iloc[0]['channel_x_z_scores']
             y_axis_time_series = time_features_filtered_df.iloc[0]['channel_y']
-            # y_zscore = time_features_filtered_df.iloc[0]['channel_y_z_scores']
 
             x_axis_fft_magnitude = frequency_features_filtered_df.iloc[0]['channel_x_fft_magnitude']
             x_axis_fft_frequency = frequency_features_filtered_df.iloc[0]['channel_x_fft_freq']
             y_axis_fft_magnitude = frequency_features_filtered_df.iloc[0]['channel_y_fft_magnitude']
             y_axis_fft_frequency = frequency_features_filtered_df.iloc[0]['channel_y_fft_freq']
+
+            x_axis_stft_magnitude = time_frequency_features_filtered_df.iloc[0]['channel_x_stft_magnitude']
+            x_axis_stft_frequency = time_frequency_features_filtered_df.iloc[0]['channel_x_stft_frequency']
+            x_axis_stft_time= time_frequency_features_filtered_df.iloc[0]['channel_x_stft_time']
+            y_axis_stft_magnitude = time_frequency_features_filtered_df.iloc[0]['channel_y_stft_magnitude']
+            y_axis_stft_frequency = time_frequency_features_filtered_df.iloc[0]['channel_y_stft_frequency']
+            y_axis_stft_time= time_frequency_features_filtered_df.iloc[0]['channel_y_stft_time']
+
+
+            # x_axis_wavelet_magnitude = time_frequency_features_filtered_df.iloc[0]['channel_x_wavelet_magnitude']
+            # y_axis_wavelet_magnitude = time_frequency_features_filtered_df.iloc[0]['channel_y_wavelet_magnitude']
 
             #identifiers = ['identifier', 'bearing', 'split', 'timestamp', 'channel_x', 'channel_y', 'channel_x_z_scores', 'channel_y_z_scores']
             #filtered_df = filtered_df.drop(columns=identifiers)
@@ -124,8 +141,6 @@ if submitted and level1_options and level2_options:
     tab1, tab2 = st.tabs(['Channel X', 'Channel Y'])
 
     with tab1:
-        # tab1.header("Channel X z-score chart")
-        # tab1.line_chart(x_zscore)
         tab1.header("X-axis Time Series")
         tab1.line_chart(x_axis_time_series)
 
@@ -136,9 +151,17 @@ if submitted and level1_options and level2_options:
             })
         tab1.line_chart(fft_x_df.set_index('Frequency (Hz)'))
 
+        tab1.header("X-axis STFT")
+        fig1, ax1 = plt.subplots()
+        ax1.pcolormesh(x_axis_stft_time, x_axis_stft_frequency, x_axis_stft_magnitude, shading='gouraud')
+        ax1.set_title('STFT Magnitude')
+        ax1.set_ylabel('Frequency [Hz]')
+        ax1.set_xlabel('Time [sec]')
+        tab1.pyplot(fig1)
+                        
+
     with tab2:
-        # tab2.header("Channel Y z-score chart")
-        # tab2.line_chart(y_zscore)
+
         tab2.header("Y-axis frequency chart")
         tab2.line_chart(y_axis_time_series)
 
@@ -148,8 +171,25 @@ if submitted and level1_options and level2_options:
             'Magnitude': y_axis_fft_magnitude
         })
         tab2.line_chart(fft_y_df.set_index('Frequency (Hz)'))
-        
+
+        tab2.header("Y-axis STFT")
+        fig2, ax2 = plt.subplots()
+        ax2.pcolormesh(y_axis_stft_time, y_axis_stft_frequency, y_axis_stft_magnitude, shading='gouraud')
+        ax2.set_title('STFT Magnitude')
+        ax2.set_ylabel('Frequency [Hz]')
+        ax2.set_xlabel('Time [sec]')
+        tab2.pyplot(fig2)
+
+
+
     # st.dataframe(filtered_df)
+
+    # st.info('length of x_axis_time_series: {}'.format(len(x_axis_time_series)))
+    # st.info('length of y_axis_time_series: {}'.format(len(y_axis_time_series)))
+    # st.info('length of x_axis_fft_magnitude: {}'.format(len(x_axis_fft_magnitude)))
+    # st.info('length of x_axis_fft_frequency: {}'.format(len(x_axis_fft_frequency)))
+    # st.info('length of y_axis_fft_magnitude: {}'.format(len(y_axis_fft_magnitude)))
+    # st.info('length of y_axis_fft_frequency: {}'.format(len(y_axis_fft_frequency)))
 
 end_time = time.time()
 load_time = end_time - start_time
@@ -158,8 +198,8 @@ save_to_jsonl = st.button("Save to Json File")
 if save_to_jsonl:
     reminder=st.info("Saving to Jsonl...")
     data_frame_to_jsonl(time_features, 'time_domain_features','Gold')
-    # data_frame_to_jsonl('frequency_domain_features', 'frequency_domain_features', 'Gold')
-    # data_frame_to_jsonl('time_frequency_features', 'time_frequency_features', 'Gold')
+    data_frame_to_jsonl('frequency_domain_features', 'frequency_domain_features', 'Gold')
+    data_frame_to_jsonl('time_frequency_features', 'time_frequency_features', 'Gold')
 
     # Display success and remove info message
     reminder.empty()
