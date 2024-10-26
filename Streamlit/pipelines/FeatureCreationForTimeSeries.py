@@ -8,7 +8,13 @@ import pywt
 import logging
 import time
 from sklearn.impute import SimpleImputer, KNNImputer
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder, StandardScaler, MinMaxScaler, Normalizer
+from sklearn.preprocessing import (
+    OneHotEncoder,
+    LabelEncoder,
+    StandardScaler,
+    MinMaxScaler,
+    Normalizer,
+)
 
 from pipelines.DataChecks import data_checks
 from Streamlit.pipelines.JsonlConverter import data_frame_to_jsonl
@@ -22,38 +28,47 @@ import logging
 import warnings
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 
 class DataCleanPipeline:
     def __init__(self, data):
-        self.df = data.copy()  # Ensure a copy is made to prevent altering the original data
+        self.df = (
+            data.copy()
+        )  # Ensure a copy is made to prevent altering the original data
         logging.info("Pipeline initialized with data.")
 
     def regulate_column_types(self):
         logging.info("Regulating column types.")
-        
+
         # Define the desired types, excluding the list columns from being processed by astype()
         desired_types = {
-            'id': 'int64',
-            'identifier': 'object',
-            'bearing': 'object',
-            'split': 'object',
+            "id": "int64",
+            "identifier": "object",
+            "bearing": "object",
+            "split": "object",
         }
-        
+
         # Convert columns to the desired types using astype()
         for column, dtype in desired_types.items():
             if column in self.df.columns:
-                if dtype == 'datetime64[ns]':
+                if dtype == "datetime64[ns]":
                     # Convert 'timestamp' with specific format
                     logging.info(f"Converting column '{column}' to datetime format.")
-                    self.df[column] = pd.to_datetime(self.df[column], format='%H:%M:%S', errors='coerce')
+                    self.df[column] = pd.to_datetime(
+                        self.df[column], format="%H:%M:%S", errors="coerce"
+                    )
                 else:
                     # Convert other columns to the desired types
-                    self.df[column] = self.df[column].astype(dtype, errors='ignore')
+                    self.df[column] = self.df[column].astype(dtype, errors="ignore")
                 logging.info(f"Column '{column}' converted to type '{dtype}'.")
             else:
-                logging.warning(f"Column '{column}' not found in DataFrame. Skipping type regulation.")
-        
+                logging.warning(
+                    f"Column '{column}' not found in DataFrame. Skipping type regulation."
+                )
+
         logging.info("Column type regulation completed.")
         return self.df
 
@@ -69,47 +84,61 @@ class DataCleanPipeline:
             logging.error(f"Target column '{target_column}' not found in data.")
             raise ValueError(f"Target column '{target_column}' not found in data.")
 
-        if strategy == 'Drop Missing Values':
+        if strategy == "Drop Missing Values":
             df_cleaned = df_cleaned.dropna()
-            logging.info(f"Dropped rows with missing values. Remaining rows: {df_cleaned.shape[0]}.")
+            logging.info(
+                f"Dropped rows with missing values. Remaining rows: {df_cleaned.shape[0]}."
+            )
 
-        elif strategy in ['Mean Imputation', 'Median Imputation']:
-            numeric_cols = df_cleaned.select_dtypes(include=['float64', 'int64']).columns
+        elif strategy in ["Mean Imputation", "Median Imputation"]:
+            numeric_cols = df_cleaned.select_dtypes(
+                include=["float64", "int64"]
+            ).columns
             if len(numeric_cols) > 0:
                 imputer = SimpleImputer(strategy=strategy.split()[0].lower())
-                df_cleaned[numeric_cols] = imputer.fit_transform(df_cleaned[numeric_cols])
+                df_cleaned[numeric_cols] = imputer.fit_transform(
+                    df_cleaned[numeric_cols]
+                )
                 logging.info(f"Performed {strategy.lower()} for numeric columns.")
             else:
                 logging.warning("No numeric columns found for mean/median imputation.")
 
-            categorical_cols = df_cleaned.select_dtypes(include=['object']).columns
+            categorical_cols = df_cleaned.select_dtypes(include=["object"]).columns
             if len(categorical_cols) > 0:
-                imputer = SimpleImputer(strategy='most_frequent')
-                df_cleaned[categorical_cols] = imputer.fit_transform(df_cleaned[categorical_cols])
-                logging.info("Performed most frequent imputation for categorical columns.")
+                imputer = SimpleImputer(strategy="most_frequent")
+                df_cleaned[categorical_cols] = imputer.fit_transform(
+                    df_cleaned[categorical_cols]
+                )
+                logging.info(
+                    "Performed most frequent imputation for categorical columns."
+                )
             else:
                 logging.warning("No categorical columns found for imputation.")
 
-        elif strategy == 'Mode Imputation':
-            categorical_cols = df_cleaned.select_dtypes(include=['object']).columns
+        elif strategy == "Mode Imputation":
+            categorical_cols = df_cleaned.select_dtypes(include=["object"]).columns
             if len(categorical_cols) > 0:
-                imputer = SimpleImputer(strategy='most_frequent')
-                df_cleaned[categorical_cols] = imputer.fit_transform(df_cleaned[categorical_cols])
+                imputer = SimpleImputer(strategy="most_frequent")
+                df_cleaned[categorical_cols] = imputer.fit_transform(
+                    df_cleaned[categorical_cols]
+                )
                 logging.info("Performed mode imputation for categorical columns.")
             else:
                 logging.warning("No categorical columns found for mode imputation.")
 
-        elif strategy == 'Forward Fill':
-            df_cleaned = df_cleaned.fillna(method='ffill')
+        elif strategy == "Forward Fill":
+            df_cleaned = df_cleaned.fillna(method="ffill")
             logging.info("Performed forward fill for missing values.")
 
-        elif strategy == 'Backward Fill':
-            df_cleaned = df_cleaned.fillna(method='bfill')
+        elif strategy == "Backward Fill":
+            df_cleaned = df_cleaned.fillna(method="bfill")
             logging.info("Performed backward fill for missing values.")
 
         else:
             logging.error(f"Invalid strategy: {strategy}. Choose a valid strategy.")
-            raise ValueError(f"Invalid strategy: {strategy}. Valid strategies are: 'Drop Missing Values', 'Mean Imputation', 'Median Imputation', 'Mode Imputation', 'Forward Fill', 'Backward Fill'.")
+            raise ValueError(
+                f"Invalid strategy: {strategy}. Valid strategies are: 'Drop Missing Values', 'Mean Imputation', 'Median Imputation', 'Mode Imputation', 'Forward Fill', 'Backward Fill'."
+            )
 
         self.df[target_column] = df_cleaned[target_column]
         self.df = df_cleaned
@@ -129,19 +158,27 @@ class DataCleanPipeline:
 
             # Define a function to apply scaling to each nested entry (list/array)
             def scale_entry(entry):
-                entry = np.array(entry).reshape(-1, 1)  # Reshape to 2D array for sklearn
-                if scaling_method == 'Standard Scaler':
+                entry = np.array(entry).reshape(
+                    -1, 1
+                )  # Reshape to 2D array for sklearn
+                if scaling_method == "Standard Scaler":
                     scaler = StandardScaler()
-                elif scaling_method == 'Min-Max Scaler':
+                elif scaling_method == "Min-Max Scaler":
                     scaler = MinMaxScaler()
-                elif scaling_method == 'Normalizer':
+                elif scaling_method == "Normalizer":
                     scaler = Normalizer()
                 else:
                     logging.error(f"Invalid scaling method: {scaling_method}.")
-                    raise ValueError(f"Invalid scaling method: {scaling_method}. Valid options are 'Standard Scaler', 'Min-Max Scaler', 'Normalizer'.")
-                
-                scaled_entry = scaler.fit_transform(entry).flatten()  # Flatten back to 1D after scaling
-                return scaled_entry.tolist()  # Convert to list to ensure list format is maintained
+                    raise ValueError(
+                        f"Invalid scaling method: {scaling_method}. Valid options are 'Standard Scaler', 'Min-Max Scaler', 'Normalizer'."
+                    )
+
+                scaled_entry = scaler.fit_transform(
+                    entry
+                ).flatten()  # Flatten back to 1D after scaling
+                return (
+                    scaled_entry.tolist()
+                )  # Convert to list to ensure list format is maintained
 
             # Apply scaling to each entry in the target column
             df_cleaned[column] = df_cleaned[column].apply(scale_entry)
@@ -157,25 +194,39 @@ class DataCleanPipeline:
         df_encoded = self.df.copy()
 
         # Identify categorical columns
-        categorical_cols = df_encoded.select_dtypes(include=['object', 'category']).columns
+        categorical_cols = df_encoded.select_dtypes(
+            include=["object", "category"]
+        ).columns
 
         for col in categorical_cols:
             # Skip columns that are in target_column
-            if col in target_column or col == 'timestamp' or col == 'identifier':
+            if col in target_column or col == "timestamp" or col == "identifier":
                 logging.info(f"Skipping encoding for column: {col}.")
                 continue
-            
+
             # Check if column entries are lists or arrays and flatten them
             if df_encoded[col].apply(lambda x: isinstance(x, (list, np.ndarray))).any():
-                df_encoded[col] = df_encoded[col].apply(lambda x: x[0] if isinstance(x, (list, np.ndarray)) and len(x) > 0 else None)
+                df_encoded[col] = df_encoded[col].apply(
+                    lambda x: (
+                        x[0]
+                        if isinstance(x, (list, np.ndarray)) and len(x) > 0
+                        else None
+                    )
+                )
 
             # Apply encoding based on the number of unique values
-            if len(df_encoded[col].unique()) > 2:  # Apply one-hot encoding for multi-class columns
-                df_encoded = pd.get_dummies(df_encoded, columns=[col], prefix=col, drop_first=False)
+            if (
+                len(df_encoded[col].unique()) > 2
+            ):  # Apply one-hot encoding for multi-class columns
+                df_encoded = pd.get_dummies(
+                    df_encoded, columns=[col], prefix=col, drop_first=False
+                )
                 logging.info(f"One-hot encoding applied to column: {col}.")
             else:
                 le = LabelEncoder()
-                df_encoded[col] = le.fit_transform(df_encoded[col].astype(str))  # Ensure all entries are strings
+                df_encoded[col] = le.fit_transform(
+                    df_encoded[col].astype(str)
+                )  # Ensure all entries are strings
                 logging.info(f"Label encoding applied to column: {col}.")
 
         self.df = df_encoded
@@ -197,18 +248,21 @@ class DataCleanPipeline:
     def outlier_removal(self):
         logging.info("Starting outlier removal.")
         threshold = 3
-        channels = ['channel_x', 'channel_y']
+        channels = ["channel_x", "channel_y"]
         for column in channels:
+
             def compute_z_scores(ts):
                 ts = np.array(ts)
                 return (ts - np.mean(ts)) / np.std(ts)
 
-            self.df[f'{column}_z_scores'] = self.df[column].apply(compute_z_scores)
-            self.df[f'{column}_anomalies'] = self.df[f'{column}_z_scores'].apply(lambda z: np.any(np.abs(z) > threshold))
+            self.df[f"{column}_z_scores"] = self.df[column].apply(compute_z_scores)
+            self.df[f"{column}_anomalies"] = self.df[f"{column}_z_scores"].apply(
+                lambda z: np.any(np.abs(z) > threshold)
+            )
 
-            if self.df[f'{column}_anomalies'].any():
+            if self.df[f"{column}_anomalies"].any():
                 logging.error(f"Anomalies detected in column '{column}':")
-                logging.error(self.df[self.df[f'{column}_anomalies']])
+                logging.error(self.df[self.df[f"{column}_anomalies"]])
 
             logging.info(f"Outlier removal completed for column: {column}.\n")
 
@@ -226,8 +280,12 @@ class DataCleanPipeline:
             print("Missing columns before imputation:")
             print(missing_columns)
 
-        logging.info(f"Handling missing values using strategy: {missing_value_strategy}.")
-        self.preprocess_data(strategy=missing_value_strategy, target_column=target_column)
+        logging.info(
+            f"Handling missing values using strategy: {missing_value_strategy}."
+        )
+        self.preprocess_data(
+            strategy=missing_value_strategy, target_column=target_column
+        )
 
         logging.info(f"Scaling data using method: {scaling_method}.")
         self.scale_data(scaling_method=scaling_method, target_column=target_column)
@@ -238,101 +296,138 @@ class DataCleanPipeline:
         self.outlier_removal()
         logging.info("Outlier Removal completed.\n")
 
-        self.df = self.df.set_index('id', drop=True)  # Set 'id' as the index and drop the column
+        self.df = self.df.set_index(
+            "id", drop=True
+        )  # Set 'id' as the index and drop the column
         logging.info("Data cleaning pipeline completed.\n")
         return self.df
 
+
 ### Feature Engineering Code
-def time_domain_features(df, channel_columns=['channel_x', 'channel_y']):
+def time_domain_features(df, channel_columns=["channel_x", "channel_y"]):
     logging.info("Extracting time-domain features...")
 
     for channel in channel_columns:
 
         if df[channel].apply(lambda x: isinstance(x, list)).all():
-            df[f'{channel}_mean'] = df[channel].apply(np.mean)
-            df[f'{channel}_median'] = df[channel].apply(np.median)
-            df[f'{channel}_std'] = df[channel].apply(np.std)
-            df[f'{channel}_var'] = df[channel].apply(np.var)
-            df[f'{channel}_skew'] = df[channel].apply(lambda x: skew(x))
-            df[f'{channel}_kurtosis'] = df[channel].apply(lambda x: kurtosis(x))
-            df[f'{channel}_rms'] = df[channel].apply(lambda x: np.sqrt(np.mean(np.square(x))))
-            df[f'{channel}_ptp'] = df[channel].apply(np.ptp)
-            df[f'{channel}_crest_factor'] = df[channel].apply(lambda x: np.max(np.abs(x)) / np.sqrt(np.mean(np.square(x))))
-            df[f'{channel}_energy'] = df[channel].apply(lambda x: np.sum(np.square(x)))
+            df[f"{channel}_mean"] = df[channel].apply(np.mean)
+            df[f"{channel}_median"] = df[channel].apply(np.median)
+            df[f"{channel}_std"] = df[channel].apply(np.std)
+            df[f"{channel}_var"] = df[channel].apply(np.var)
+            df[f"{channel}_skew"] = df[channel].apply(lambda x: skew(x))
+            df[f"{channel}_kurtosis"] = df[channel].apply(lambda x: kurtosis(x))
+            df[f"{channel}_rms"] = df[channel].apply(
+                lambda x: np.sqrt(np.mean(np.square(x)))
+            )
+            df[f"{channel}_ptp"] = df[channel].apply(np.ptp)
+            df[f"{channel}_crest_factor"] = df[channel].apply(
+                lambda x: np.max(np.abs(x)) / np.sqrt(np.mean(np.square(x)))
+            )
+            df[f"{channel}_energy"] = df[channel].apply(lambda x: np.sum(np.square(x)))
+
             def compute_entropy(ts):
                 histogram, bin_edges = np.histogram(ts, bins=10, density=True)
                 pdf = histogram / np.sum(histogram)
                 pdf = pdf[pdf > 0]
                 return -np.sum(pdf * np.log2(pdf))
-            df[f'{channel}_entropy'] = df[channel].apply(compute_entropy)
+
+            df[f"{channel}_entropy"] = df[channel].apply(compute_entropy)
         else:
-            logging.error(f"Values in column '{channel}' are not in the expected list format.")
-            raise ValueError(f"Values in column '{channel}' are not in the expected list format.")
+            logging.error(
+                f"Values in column '{channel}' are not in the expected list format."
+            )
+            raise ValueError(
+                f"Values in column '{channel}' are not in the expected list format."
+            )
     logging.info("Time-domain features extracted successfully.")
     return df
 
     # data_frame_to_jsonl(df, 'time_domain_features','Gold')
     # logging.info("Time-domain features saved to JSONL file at Silver output.")
 
-def frequency_domain_features(df, channel_columns=['channel_x', 'channel_y']):
+
+def frequency_domain_features(df, channel_columns=["channel_x", "channel_y"]):
     logging.info("Extracting frequency-domain features...")
 
     for channel in channel_columns:
+
         if df[channel].apply(lambda x: isinstance(x, list)).all():
             # Compute the FFT for each signal in the column
-            df[f'{channel}_fft'] = df[channel].apply(lambda x: np.fft.fft(x))
-            
+            df[f"{channel}_fft"] = df[channel].apply(lambda x: np.fft.fft(x))
+
             # Since FFT results are complex, we need to handle them appropriately
             # Compute the magnitude and phase of the FFT
-            df[f'{channel}_fft_magnitude'] = df[f'{channel}_fft'].apply(lambda x: np.abs(x)[:len(x)//2])
-            df[f'{channel}_fft_phase'] = df[f'{channel}_fft'].apply(lambda x: np.angle(x)[:len(x)//2])
-            
+            df[f"{channel}_fft_magnitude"] = df[f"{channel}_fft"].apply(
+                lambda x: np.abs(x)[: len(x) // 2]
+            )
+            df[f"{channel}_fft_phase"] = df[f"{channel}_fft"].apply(
+                lambda x: np.angle(x)[: len(x) // 2]
+            )
+
             # Compute the frequencies corresponding to the FFT values
-            n = df[channel].apply(len).iloc[0]  # Assuming all signals have the same length
-            freq = np.fft.fftfreq(n, d=1/len(df[channel]))[:n//2]
-            df[f'{channel}_fft_freq'] = [freq] * len(df)  # Assign the same freq array to all rows
-            
+            n = (
+                df[channel].apply(len).iloc[0]
+            )  # Assuming all signals have the same length
+            freq = np.fft.fftfreq(n, d=1 / 25600)[: n // 2]
+            df[f"{channel}_fft_freq"] = [freq] * len(
+                df
+            )  # Assign the same freq array to all rows
+
             # Compute the power spectrum
-            df[f'{channel}_power_spectrum'] = df[f'{channel}_fft_magnitude'].apply(lambda x: x ** 2)
-            
+            df[f"{channel}_power_spectrum"] = df[f"{channel}_fft_magnitude"].apply(
+                lambda x: x**2
+            )
+
             # Compute statistical features of the FFT magnitude
-            df[f'{channel}_fft_mean'] = df[f'{channel}_fft_magnitude'].apply(np.mean)
-            df[f'{channel}_fft_std'] = df[f'{channel}_fft_magnitude'].apply(np.std)
-            df[f'{channel}_fft_max'] = df[f'{channel}_fft_magnitude'].apply(np.max)
-            
+            df[f"{channel}_fft_mean"] = df[f"{channel}_fft_magnitude"].apply(np.mean)
+            df[f"{channel}_fft_std"] = df[f"{channel}_fft_magnitude"].apply(np.std)
+            df[f"{channel}_fft_max"] = df[f"{channel}_fft_magnitude"].apply(np.max)
+
             # Find the frequency corresponding to the maximum FFT magnitude
             # df[f'{channel}_fft_freq_max'] = df.apply(
             #     lambda row: row[f'{channel}_fft_freq'][np.argmax(row[f'{channel}_fft_magnitude'])], axis=1)
-            
+
             # # Compute spectral centroid
             # df[f'{channel}_spectral_centroid'] = df.apply(
             #     lambda row: np.sum(row[f'{channel}_fft_freq'] * row[f'{channel}_fft_magnitude']) / np.sum(row[f'{channel}_fft_magnitude']), axis=1)
-            
+
             # # Compute spectral bandwidth
             # df[f'{channel}_spectral_bandwidth'] = df.apply(
             #     lambda row: np.sqrt(np.sum(((row[f'{channel}_fft_freq'] - row[f'{channel}_spectral_centroid']) ** 2) * row[f'{channel}_fft_magnitude']) / np.sum(row[f'{channel}_fft_magnitude'])), axis=1)
-            
+
             # Compute analytic signal
-            df[f'{channel}_analytic_signal'] = df[channel].apply(lambda x: hilbert(x))
-            df[f'{channel}_amplitude_envelope'] = df[f'{channel}_analytic_signal'].apply(lambda x: np.abs(x))
-            df[f'{channel}_phase_envelope'] = df[f'{channel}_analytic_signal'].apply(lambda x: np.angle(x))
-            
+            df[f"{channel}_analytic_signal"] = df[channel].apply(lambda x: hilbert(x))
+            df[f"{channel}_amplitude_envelope"] = df[
+                f"{channel}_analytic_signal"
+            ].apply(lambda x: np.abs(x))
+            df[f"{channel}_phase_envelope"] = df[f"{channel}_analytic_signal"].apply(
+                lambda x: np.angle(x)
+            )
+
             # Compute log power spectrum
-            df[f'{channel}_log_power_spectrum'] = df[f'{channel}_power_spectrum'].apply(lambda x: np.log(x + 1e-10))
-            
+            df[f"{channel}_log_power_spectrum"] = df[f"{channel}_power_spectrum"].apply(
+                lambda x: np.log(x + 1e-10)
+            )
+
             # Compute cepstrum
-            df[f'{channel}_cepstrum'] = df[f'{channel}_log_power_spectrum'].apply(lambda x: np.abs(ifft(x).real))
-            df[f'{channel}_cepstrum_mean'] = df[f'{channel}_cepstrum'].apply(np.mean)
-            df[f'{channel}_cepstrum_std'] = df[f'{channel}_cepstrum'].apply(np.std)
-            df[f'{channel}_cepstrum_max'] = df[f'{channel}_cepstrum'].apply(np.max)
-            
+            df[f"{channel}_cepstrum"] = df[f"{channel}_log_power_spectrum"].apply(
+                lambda x: np.abs(ifft(x).real)
+            )
+            df[f"{channel}_cepstrum_mean"] = df[f"{channel}_cepstrum"].apply(np.mean)
+            df[f"{channel}_cepstrum_std"] = df[f"{channel}_cepstrum"].apply(np.std)
+            df[f"{channel}_cepstrum_max"] = df[f"{channel}_cepstrum"].apply(np.max)
+
             # Remove complex columns before serialization
-            complex_columns = [f'{channel}_fft', f'{channel}_analytic_signal']
+            complex_columns = [f"{channel}_fft", f"{channel}_analytic_signal"]
             df.drop(columns=complex_columns, inplace=True)
         else:
-            logging.error(f"Values in column '{channel}' are not in the expected list format.")
-            raise ValueError(f"Values in column '{channel}' are not in the expected list format.")
-        
+            logging.error(
+                f"Values in column '{channel}' are not in the expected list format."
+            )
+            raise ValueError(
+                f"Values in column '{channel}' are not in the expected list format."
+            )
+
     logging.info("Frequency-domain features extracted successfully.")
 
     # data_frame_to_jsonl(df, 'frequency_domain_features','Gold')
@@ -340,19 +435,23 @@ def frequency_domain_features(df, channel_columns=['channel_x', 'channel_y']):
 
     return df
 
-def time_frequency_features(df, channel_columns=['channel_x', 'channel_y']):
+
+def time_frequency_features(df, channel_columns=["channel_x", "channel_y"]):
     logging.info("Extracting time-frequency domain features...")
+
     def compute_stft(ts):
-        f, t, Zxx = stft(ts, nperseg=128)
+        f, t, Zxx = stft(ts, fs=25600)
         stft_magnitude = np.abs(Zxx)
+        stft_frequency = f
+        stft_time = t
         stft_mean = np.mean(stft_magnitude)
         stft_std = np.std(stft_magnitude)
         stft_max = np.max(stft_magnitude)
-        return stft_mean, stft_std, stft_max, stft_magnitude
-    
+        return stft_mean, stft_std, stft_max, stft_magnitude, stft_frequency, stft_time
+
     def compute_wavelet(ts):
-        scales = np.arange(1, 128)
-        wavelet = 'cmor1.0-1.5'
+        scales = np.arange(1, 64)
+        wavelet = "cmor1.0-1.5"
         coefficients, frequencies = pywt.cwt(ts, scales, wavelet)
         wavelet_magnitude = np.abs(coefficients)
         wavelet_mean = np.mean(wavelet_magnitude)
@@ -364,63 +463,55 @@ def time_frequency_features(df, channel_columns=['channel_x', 'channel_y']):
         if df[channel].apply(lambda x: isinstance(x, list)).all():
 
             stft_results = df[channel].apply(compute_stft)
-            df[f'{channel}_stft_mean'] = stft_results.apply(lambda x: x[0])
-            df[f'{channel}_stft_std'] = stft_results.apply(lambda x: x[1])
-            df[f'{channel}_stft_max'] = stft_results.apply(lambda x: x[2])
-            df[f'{channel}_stft_magnitude'] = stft_results.apply(lambda x: x[3])
+            df[f"{channel}_stft_mean"] = stft_results.apply(lambda x: x[0])
+            df[f"{channel}_stft_std"] = stft_results.apply(lambda x: x[1])
+            df[f"{channel}_stft_max"] = stft_results.apply(lambda x: x[2])
+            df[f"{channel}_stft_magnitude"] = stft_results.apply(lambda x: x[3].tolist())
+            df[f"{channel}_stft_frequency"] = stft_results.apply(lambda x: x[4].tolist())
+            df[f"{channel}_stft_time"] = stft_results.apply(lambda x: x[5].tolist())
 
-
-            wavelet_results = df[channel].apply(compute_wavelet)
-            df[f'{channel}_wavelet_mean'] = wavelet_results.apply(lambda x: x[0])
-            df[f'{channel}_wavelet_std'] = wavelet_results.apply(lambda x: x[1])
-            df[f'{channel}_wavelet_max'] = wavelet_results.apply(lambda x: x[2])
-            df[f'{channel}_wavelet_magnitude'] = wavelet_results.apply(lambda x: x[3])
+            # wavelet_results = df[channel].apply(compute_wavelet)
+            # df[f"{channel}_wavelet_mean"] = wavelet_results.apply(lambda x: x[0])
+            # df[f"{channel}_wavelet_std"] = wavelet_results.apply(lambda x: x[1])
+            # df[f"{channel}_wavelet_max"] = wavelet_results.apply(lambda x: x[2])
+            # df[f"{channel}_wavelet_magnitude"] = wavelet_results.apply(lambda x: x[3].tolist())
         else:
-            logging.error(f"Values in column '{channel}' are not in the expected list format.")
-            raise ValueError(f"Values in column '{channel}' are not in the expected list format.")
-        
+            logging.error(
+                f"Values in column '{channel}' are not in the expected list format."
+            )
+            raise ValueError(
+                f"Values in column '{channel}' are not in the expected list format."
+            )
+
     logging.info("Time-frequency domain features extracted successfully.")
 
     # data_frame_to_jsonl(df, 'time_frequency_features','Gold')
     # logging.info("Time-frequency domain features saved to JSONL file at Silver output.")
     return df
+ 
 
-# def extract_features(df, channel_columns=['channel_x', 'channel_y']):
-#     logging.info("Starting feature extraction process...")
-#     time_df = time_domain_features(df, channel_columns)
-#     frequencey_df = frequency_domain_features(df, channel_columns)
-#     time_frequencey_df = time_frequency_features(df, channel_columns)
-#     logging.info("Feature extraction completed.")
-#     return 
-# Combine all feature extraction functions
+def extract_features(df, channel_columns=["channel_x", "channel_y"]):
 
-
-
-
-def extract_features(df, channel_columns=['channel_x', 'channel_y']):
-    # Perform data checks before feature extraction
-    #df = data_checks(df, channel_columns)
     # Extract time-domain features
-    cleaned_df= df.copy()
-
+    cleaned_df = df.copy()
     time_domain_feature_df = time_domain_features(cleaned_df, channel_columns)
-    print('time------------feature------in--------func',time_domain_feature_df)
-    # # Extract frequency-domain features
+    print("time------------feature------in--------func", time_domain_feature_df)
+
+    # Extract frequency-domain features
     cleaned_df=df.copy()
     frequency_domain_features_df = frequency_domain_features(cleaned_df, channel_columns)
-    # # Extract time-frequency domain features
-    # time_frequency_features_df = time_frequency_features(df, channel_columns)
+
+    # Extract time-frequency domain features
+    cleaned_df = df.copy()
+    time_frequency_features_df = time_frequency_features(cleaned_df, channel_columns)
+
     # return time_domain_feature_df
-    return time_domain_feature_df, frequency_domain_features_df
 
-
+    return time_domain_feature_df, frequency_domain_features_df,time_frequency_features_df
 
 
 # # Usage example
 # start_time = time.time()
-
-
-        
 
 
 # file_path = 'C:/uoft/Meng_project/bearings-project-meng/Streamlit/outputs/Bearing1_1.jsonl'
