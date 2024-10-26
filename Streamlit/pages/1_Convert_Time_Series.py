@@ -174,7 +174,9 @@ def run_data_cleaning(checked_df, missing_value_strategy, scaling_method):
 def extract_features_from_cleaned_data(cleaned_df):
     log_messages = []  # Initialize a list to store log messages
     feature_extraction_steps = [
-        "Extracting Time-Domain Features"
+        "Extracting Time-Domain Features",
+        "Extracting Frequency-Domain Features",
+        # "Extracting Time-Frequency Features"
     ]
 
     # Display the list of feature extraction steps
@@ -194,10 +196,12 @@ def extract_features_from_cleaned_data(cleaned_df):
         feature_placeholder.write(completion_message)  # Update the placeholder with completion message
 
     # Perform actual feature extraction
-    time_domain_features = extract_features(cleaned_df)
+    time_domain_features,frequency_domain_features = extract_features(cleaned_df)
+    # time_domain_features = extract_features(cleaned_df)
     log_messages.append("Feature extraction completed successfully.")
     
-    return time_domain_features
+    return time_domain_features, frequency_domain_features
+    # return time_domain_features
 
 
 #st.title("AUTO ML")
@@ -275,22 +279,36 @@ if uploaded_file is not None:
 
                     # Extract features directly from cleaned_df
                     if 'time_domain_features.jsonl' not in os.listdir('outputs\\Gold'):
-                        time_features = extract_features_from_cleaned_data(cleaned_df)
+                        # time_features,frequency_features = extract_features_from_cleaned_data(cleaned_df)
+                        time_features,frequency_features= extract_features_from_cleaned_data(cleaned_df)
                         data_frame_to_jsonl(time_features, 'time_domain_features', 'Gold')  # Save extracted features
+                        data_frame_to_jsonl(frequency_features, 'frequency_domain_features', 'Gold')
+                        # time_frequency_features=data_frame_to_jsonl(time_frequency_features, 'time_frequency_features', 'Gold')
                         st.session_state.time_features = time_features
+                        st.session_state.frequency_features = frequency_features
+                        # st.session_state.time_frequency_features = time_frequency_features
                         st.write("Features extracted successfully")
                     else:
                         loading = st.info("Loading the file...")
                         time_features = jsonl_to_dataframe('outputs\\Gold\\time_domain_features.jsonl')
                         st.session_state.time_features = time_features
+                        frequency_features = jsonl_to_dataframe('outputs\\Gold\\frequency_domain_features.jsonl')
+                        st.session_state.frequency_features = frequency_features
                         loading.empty()
 
-                    st.write("Number of time features:", len(time_features))
+                    # Display the extracted features
+                    st.write("Time Domain Features:")
                     st.write(time_features.head())
+                    st.write("Frequency Domain Features:")
+                    st.write(frequency_features.head())
+
+
+                    st.write("Number of time features:", len(time_features))
+
                     st.write("Features extracted successfully")
 
 
-
+ 
 
 # Function to delete temporary files
 def delete_files():

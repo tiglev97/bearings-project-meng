@@ -4,7 +4,7 @@ import json
 from scipy.fft import fft, ifft
 from scipy.signal import hilbert, stft
 from scipy.stats import skew, kurtosis
-#import pywt
+import pywt
 import logging
 import time
 from sklearn.impute import SimpleImputer, KNNImputer
@@ -276,40 +276,59 @@ def time_domain_features(df, channel_columns=['channel_x', 'channel_y']):
 
 def frequency_domain_features(df, channel_columns=['channel_x', 'channel_y']):
     logging.info("Extracting frequency-domain features...")
-    def compute_fft(channel_data):
-        fft_vals = np.fft.fft(channel_data)
-        fft_freqs = np.fft.fftfreq(len(fft_vals))
-        amplitude = np.abs(fft_vals)
-        return fft_freqs[np.argmax(amplitude)]
 
     for channel in channel_columns:
         if df[channel].apply(lambda x: isinstance(x, list)).all():
-            df[f'{channel}_fft'] = df[channel].apply(fft)
+            # Compute the FFT for each signal in the column
+            df[f'{channel}_fft'] = df[channel].apply(lambda x: np.fft.fft(x))
+            
+            # Since FFT results are complex, we need to handle them appropriately
+            # Compute the magnitude and phase of the FFT
             df[f'{channel}_fft_magnitude'] = df[f'{channel}_fft'].apply(lambda x: np.abs(x)[:len(x)//2])
-            df[f'{channel}_fft_freq'] = df[f'{channel}_fft_magnitude'].apply(lambda x: np.fft.fftfreq(len(x)*2, d=1)[:len(x)])
+            df[f'{channel}_fft_phase'] = df[f'{channel}_fft'].apply(lambda x: np.angle(x)[:len(x)//2])
+            
+            # Compute the frequencies corresponding to the FFT values
+            n = df[channel].apply(len).iloc[0]  # Assuming all signals have the same length
+            freq = np.fft.fftfreq(n, d=1/len(df[channel]))[:n//2]
+            df[f'{channel}_fft_freq'] = [freq] * len(df)  # Assign the same freq array to all rows
+            
+            # Compute the power spectrum
             df[f'{channel}_power_spectrum'] = df[f'{channel}_fft_magnitude'].apply(lambda x: x ** 2)
+            
+            # Compute statistical features of the FFT magnitude
             df[f'{channel}_fft_mean'] = df[f'{channel}_fft_magnitude'].apply(np.mean)
             df[f'{channel}_fft_std'] = df[f'{channel}_fft_magnitude'].apply(np.std)
             df[f'{channel}_fft_max'] = df[f'{channel}_fft_magnitude'].apply(np.max)
-            df[f'{channel}_fft_freq_max'] = df[f'{channel}_fft'].apply(lambda x: np.argmax(np.abs(x)))
-
-            def spectral_centroid(magnitude, freq):
-                return np.sum(freq * magnitude) / np.sum(magnitude)
-            df[f'{channel}_spectral_centroid'] = df.apply(lambda row: spectral_centroid(row[f'{channel}_fft_magnitude'], row[f'{channel}_fft_freq']), axis=1)
-
-            def spectral_bandwidth(magnitude, freq, centroid):
-                return np.sqrt(np.sum(((freq - centroid) ** 2) * magnitude) / np.sum(magnitude))
-            df[f'{channel}_spectral_bandwidth'] = df.apply(lambda row: spectral_bandwidth(row[f'{channel}_fft_magnitude'], row[f'{channel}_fft_freq'], row[f'{channel}_spectral_centroid']), axis=1)
-
-            df[f'{channel}_analytic_signal'] = df[channel].apply(hilbert)
-            df[f'{channel}_amplitude_envelope'] = df[f'{channel}_analytic_signal'].apply(np.abs)
-            df[f'{channel}_phase_envelope'] = df[f'{channel}_analytic_signal'].apply(np.angle)
-
+            
+            # Find the frequency corresponding to the maximum FFT magnitude
+            # df[f'{channel}_fft_freq_max'] = df.apply(
+            #     lambda row: row[f'{channel}_fft_freq'][np.argmax(row[f'{channel}_fft_magnitude'])], axis=1)
+            
+            # # Compute spectral centroid
+            # df[f'{channel}_spectral_centroid'] = df.apply(
+            #     lambda row: np.sum(row[f'{channel}_fft_freq'] * row[f'{channel}_fft_magnitude']) / np.sum(row[f'{channel}_fft_magnitude']), axis=1)
+            
+            # # Compute spectral bandwidth
+            # df[f'{channel}_spectral_bandwidth'] = df.apply(
+            #     lambda row: np.sqrt(np.sum(((row[f'{channel}_fft_freq'] - row[f'{channel}_spectral_centroid']) ** 2) * row[f'{channel}_fft_magnitude']) / np.sum(row[f'{channel}_fft_magnitude'])), axis=1)
+            
+            # Compute analytic signal
+            df[f'{channel}_analytic_signal'] = df[channel].apply(lambda x: hilbert(x))
+            df[f'{channel}_amplitude_envelope'] = df[f'{channel}_analytic_signal'].apply(lambda x: np.abs(x))
+            df[f'{channel}_phase_envelope'] = df[f'{channel}_analytic_signal'].apply(lambda x: np.angle(x))
+            
+            # Compute log power spectrum
             df[f'{channel}_log_power_spectrum'] = df[f'{channel}_power_spectrum'].apply(lambda x: np.log(x + 1e-10))
+            
+            # Compute cepstrum
             df[f'{channel}_cepstrum'] = df[f'{channel}_log_power_spectrum'].apply(lambda x: np.abs(ifft(x).real))
             df[f'{channel}_cepstrum_mean'] = df[f'{channel}_cepstrum'].apply(np.mean)
             df[f'{channel}_cepstrum_std'] = df[f'{channel}_cepstrum'].apply(np.std)
             df[f'{channel}_cepstrum_max'] = df[f'{channel}_cepstrum'].apply(np.max)
+            
+            # Remove complex columns before serialization
+            complex_columns = [f'{channel}_fft', f'{channel}_analytic_signal']
+            df.drop(columns=complex_columns, inplace=True)
         else:
             logging.error(f"Values in column '{channel}' are not in the expected list format.")
             raise ValueError(f"Values in column '{channel}' are not in the expected list format.")
@@ -323,33 +342,39 @@ def frequency_domain_features(df, channel_columns=['channel_x', 'channel_y']):
 
 def time_frequency_features(df, channel_columns=['channel_x', 'channel_y']):
     logging.info("Extracting time-frequency domain features...")
+    def compute_stft(ts):
+        f, t, Zxx = stft(ts, nperseg=128)
+        stft_magnitude = np.abs(Zxx)
+        stft_mean = np.mean(stft_magnitude)
+        stft_std = np.std(stft_magnitude)
+        stft_max = np.max(stft_magnitude)
+        return stft_mean, stft_std, stft_max, stft_magnitude
+    
+    def compute_wavelet(ts):
+        scales = np.arange(1, 128)
+        wavelet = 'cmor1.0-1.5'
+        coefficients, frequencies = pywt.cwt(ts, scales, wavelet)
+        wavelet_magnitude = np.abs(coefficients)
+        wavelet_mean = np.mean(wavelet_magnitude)
+        wavelet_std = np.std(wavelet_magnitude)
+        wavelet_max = np.max(wavelet_magnitude)
+        return wavelet_mean, wavelet_std, wavelet_max, wavelet_magnitude
+
     for channel in channel_columns:
         if df[channel].apply(lambda x: isinstance(x, list)).all():
-            def compute_stft(ts):
-                f, t, Zxx = stft(ts, nperseg=128)
-                stft_magnitude = np.abs(Zxx)
-                stft_mean = np.mean(stft_magnitude)
-                stft_std = np.std(stft_magnitude)
-                stft_max = np.max(stft_magnitude)
-                return stft_mean, stft_std, stft_max
+
             stft_results = df[channel].apply(compute_stft)
             df[f'{channel}_stft_mean'] = stft_results.apply(lambda x: x[0])
             df[f'{channel}_stft_std'] = stft_results.apply(lambda x: x[1])
             df[f'{channel}_stft_max'] = stft_results.apply(lambda x: x[2])
+            df[f'{channel}_stft_magnitude'] = stft_results.apply(lambda x: x[3])
 
-            def compute_wavelet(ts):
-                scales = np.arange(1, 128)
-                wavelet = 'cmor1.0-1.5'
-                coefficients, frequencies = pywt.cwt(ts, scales, wavelet)
-                wavelet_magnitude = np.abs(coefficients)
-                wavelet_mean = np.mean(wavelet_magnitude)
-                wavelet_std = np.std(wavelet_magnitude)
-                wavelet_max = np.max(wavelet_magnitude)
-                return wavelet_mean, wavelet_std, wavelet_max
+
             wavelet_results = df[channel].apply(compute_wavelet)
             df[f'{channel}_wavelet_mean'] = wavelet_results.apply(lambda x: x[0])
             df[f'{channel}_wavelet_std'] = wavelet_results.apply(lambda x: x[1])
             df[f'{channel}_wavelet_max'] = wavelet_results.apply(lambda x: x[2])
+            df[f'{channel}_wavelet_magnitude'] = wavelet_results.apply(lambda x: x[3])
         else:
             logging.error(f"Values in column '{channel}' are not in the expected list format.")
             raise ValueError(f"Values in column '{channel}' are not in the expected list format.")
@@ -376,14 +401,17 @@ def extract_features(df, channel_columns=['channel_x', 'channel_y']):
     # Perform data checks before feature extraction
     #df = data_checks(df, channel_columns)
     # Extract time-domain features
-    time_domain_feature_df = time_domain_features(df, channel_columns)
+    cleaned_df= df.copy()
+
+    time_domain_feature_df = time_domain_features(cleaned_df, channel_columns)
     print('time------------feature------in--------func',time_domain_feature_df)
     # # Extract frequency-domain features
-    # frequency_domain_features_df = frequency_domain_features(df, channel_columns)
+    cleaned_df=df.copy()
+    frequency_domain_features_df = frequency_domain_features(cleaned_df, channel_columns)
     # # Extract time-frequency domain features
     # time_frequency_features_df = time_frequency_features(df, channel_columns)
-    return time_domain_feature_df
-    # return time_domain_feature_df, frequency_domain_features_df, time_frequency_features_df
+    # return time_domain_feature_df
+    return time_domain_feature_df, frequency_domain_features_df
 
 
 
