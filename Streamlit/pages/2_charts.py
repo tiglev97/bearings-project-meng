@@ -59,11 +59,19 @@ st.sidebar.markdown(
 if 'time_features' in st.session_state:
     df = st.session_state.time_features  # Retrieve the DataFrame from session state
 elif 'time_domain_features.jsonl' in os.listdir('outputs\\Gold'):
-    file_path = 'outputs\\Gold\\time_domain_features.jsonl'
+
+    time_features_file_path = 'outputs\\Gold\\time_domain_features.jsonl'
+    frequency_features_file_path = 'outputs\\Gold\\frequency_domain_features.jsonl'
+
     loading=st.empty()
     loading.info("Loading the file...")
-    df = jsonl_to_dataframe(file_path)
-    st.session_state.time_features = df  # Save the DataFrame to session state
+
+    time_features_df = jsonl_to_dataframe(time_features_file_path)
+    st.session_state.time_features = time_features_df  # Save the DataFrame to session state
+
+    frequency_features_df = jsonl_to_dataframe(frequency_features_file_path)
+    st.session_state.frequency_features = frequency_features_df  # Save the DataFrame to session state
+
     loading.empty()
 else:
     st.error("No data available. Please run the data checks on the first page.")
@@ -77,24 +85,33 @@ else:
 start_time = time.time()
 # Create a form for user input
 time_features = st.session_state.time_features
+frequency_features=st.session_state.frequency_features
+
 with st.form("selection_form"):
     # Selectbox for level 1 (identifier)
     level1_options = st.selectbox('Select Level 1 (identifier):', time_features['identifier'].unique())
     
     # Check if level 1 is selected
     if level1_options:
-        filtered_df = time_features[time_features['identifier'] == level1_options]
+        time_features_filtered_df = time_features[time_features['identifier'] == level1_options]
+        frequency_features_filtered_df = frequency_features[frequency_features['identifier'] == level1_options]
 
         # Selectbox for level 2 (timestamp)
-        level2_options = st.selectbox('Select Level 2 (timestamp):', filtered_df['timestamp'].unique())
+        level2_options = st.selectbox('Select Level 2 (timestamp):', time_features_filtered_df['timestamp'].unique())
 
         if level2_options:
-            filtered_df = filtered_df[filtered_df['timestamp'] == level2_options]
+            time_features_filtered_df = time_features_filtered_df[time_features_filtered_df['timestamp'] == level2_options]
+            
 
-            x_axis = filtered_df.iloc[0]['channel_x']
-            x_zscore = filtered_df.iloc[0]['channel_x_z_scores']
-            y_axis = filtered_df.iloc[0]['channel_y']
-            y_zscore = filtered_df.iloc[0]['channel_y_z_scores']
+            x_axis_time_series = time_features_filtered_df.iloc[0]['channel_x']
+            # x_zscore = time_features_filtered_df.iloc[0]['channel_x_z_scores']
+            y_axis_time_series = time_features_filtered_df.iloc[0]['channel_y']
+            # y_zscore = time_features_filtered_df.iloc[0]['channel_y_z_scores']
+
+            x_axis_fft_magnitude = frequency_features_filtered_df.iloc[0]['channel_x_fft_magnitude']
+            x_axis_fft_frequency = frequency_features_filtered_df.iloc[0]['channel_x_fft_freq']
+            y_axis_fft_magnitude = frequency_features_filtered_df.iloc[0]['channel_y_fft_magnitude']
+            y_axis_fft_frequency = frequency_features_filtered_df.iloc[0]['channel_y_fft_freq']
 
             #identifiers = ['identifier', 'bearing', 'split', 'timestamp', 'channel_x', 'channel_y', 'channel_x_z_scores', 'channel_y_z_scores']
             #filtered_df = filtered_df.drop(columns=identifiers)
@@ -107,18 +124,32 @@ if submitted and level1_options and level2_options:
     tab1, tab2 = st.tabs(['Channel X', 'Channel Y'])
 
     with tab1:
-        tab1.header("Channel X z-score chart")
-        tab1.line_chart(x_zscore)
-        tab1.header("X-axis frequency chart")
-        tab1.line_chart(x_axis)
+        # tab1.header("Channel X z-score chart")
+        # tab1.line_chart(x_zscore)
+        tab1.header("X-axis Time Series")
+        tab1.line_chart(x_axis_time_series)
+
+        tab1.header("X-axis FFT")
+        fft_x_df = pd.DataFrame({
+                'Frequency (Hz)': x_axis_fft_frequency,
+                'Magnitude': x_axis_fft_magnitude
+            })
+        tab1.line_chart(fft_x_df.set_index('Frequency (Hz)'))
 
     with tab2:
-        tab2.header("Channel Y z-score chart")
-        tab2.line_chart(y_zscore)
+        # tab2.header("Channel Y z-score chart")
+        # tab2.line_chart(y_zscore)
         tab2.header("Y-axis frequency chart")
-        tab2.line_chart(y_axis)
+        tab2.line_chart(y_axis_time_series)
 
-    st.dataframe(filtered_df)
+        tab2.header("Y-axis FFT")
+        fft_y_df = pd.DataFrame({
+            'Frequency (Hz)': y_axis_fft_frequency,
+            'Magnitude': y_axis_fft_magnitude
+        })
+        tab2.line_chart(fft_y_df.set_index('Frequency (Hz)'))
+        
+    # st.dataframe(filtered_df)
 
 end_time = time.time()
 load_time = end_time - start_time
