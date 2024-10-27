@@ -135,6 +135,7 @@ def excel_to_jsonl(folder_path, jsonl_file_path):
                         'identifier': bearing_folder_name.capitalize(),
                         "bearing": bearing,
                         'split': split_name.capitalize(),
+                        'Millisec': row['Millisec'],
                         'timestamp': f"{row['Hour']}:{row['Minute']}:{row['Second']}",
                         'time_series': {
                             "channel_x": row['Time Series x'],
