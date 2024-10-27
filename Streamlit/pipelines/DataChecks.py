@@ -35,6 +35,7 @@ def data_checks(df):
         'timestamp': str,
         'timepoint_index': int,
         'split': str,
+        #'Millisec': list,
         'timeseries': dict
     }
     

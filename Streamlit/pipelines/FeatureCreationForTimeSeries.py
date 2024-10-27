@@ -90,42 +90,6 @@ class DataCleanPipeline:
                 f"Dropped rows with missing values. Remaining rows: {df_cleaned.shape[0]}."
             )
 
-        elif strategy in ["Mean Imputation", "Median Imputation"]:
-            numeric_cols = df_cleaned.select_dtypes(
-                include=["float64", "int64"]
-            ).columns
-            if len(numeric_cols) > 0:
-                imputer = SimpleImputer(strategy=strategy.split()[0].lower())
-                df_cleaned[numeric_cols] = imputer.fit_transform(
-                    df_cleaned[numeric_cols]
-                )
-                logging.info(f"Performed {strategy.lower()} for numeric columns.")
-            else:
-                logging.warning("No numeric columns found for mean/median imputation.")
-
-            categorical_cols = df_cleaned.select_dtypes(include=["object"]).columns
-            if len(categorical_cols) > 0:
-                imputer = SimpleImputer(strategy="most_frequent")
-                df_cleaned[categorical_cols] = imputer.fit_transform(
-                    df_cleaned[categorical_cols]
-                )
-                logging.info(
-                    "Performed most frequent imputation for categorical columns."
-                )
-            else:
-                logging.warning("No categorical columns found for imputation.")
-
-        elif strategy == "Mode Imputation":
-            categorical_cols = df_cleaned.select_dtypes(include=["object"]).columns
-            if len(categorical_cols) > 0:
-                imputer = SimpleImputer(strategy="most_frequent")
-                df_cleaned[categorical_cols] = imputer.fit_transform(
-                    df_cleaned[categorical_cols]
-                )
-                logging.info("Performed mode imputation for categorical columns.")
-            else:
-                logging.warning("No categorical columns found for mode imputation.")
-
         elif strategy == "Forward Fill":
             df_cleaned = df_cleaned.fillna(method="ffill")
             logging.info("Performed forward fill for missing values.")
@@ -192,7 +156,8 @@ class DataCleanPipeline:
     def encode_categorical_columns(self, target_column):
         logging.info("Starting encoding of categorical columns.")
         df_encoded = self.df.copy()
-
+        exclude_column = ['timestamp','identifier','Millisec']
+        
         # Identify categorical columns
         categorical_cols = df_encoded.select_dtypes(
             include=["object", "category"]
@@ -200,7 +165,7 @@ class DataCleanPipeline:
 
         for col in categorical_cols:
             # Skip columns that are in target_column
-            if col in target_column or col == "timestamp" or col == "identifier":
+            if col in target_column or col in exclude_column:
                 logging.info(f"Skipping encoding for column: {col}.")
                 continue
 
@@ -495,7 +460,6 @@ def extract_features(df, channel_columns=["channel_x", "channel_y"]):
     # Extract time-domain features
     cleaned_df = df.copy()
     time_domain_feature_df = time_domain_features(cleaned_df, channel_columns)
-    print("time------------feature------in--------func", time_domain_feature_df)
 
     # Extract frequency-domain features
     cleaned_df=df.copy()
