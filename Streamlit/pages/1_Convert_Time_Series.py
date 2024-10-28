@@ -155,7 +155,6 @@ def run_data_cleaning(checked_df, missing_value_strategy, scaling_method):
         "Missing Value Imputation",
         "Normalization",
         "Label Encoding",
-        "Outlier Removal",
     ]
 
     # Display the list of data cleaning steps
@@ -275,9 +274,6 @@ if uploaded_file is not None:
                     "Select Missing Value Strategy:",
                     [
                         "Drop Missing Values",
-                        "Mean Imputation",
-                        "Median Imputation",
-                        "Mode Imputation",
                         "Forward Fill",
                         "Backward Fill",
                     ],
