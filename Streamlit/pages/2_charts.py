@@ -56,8 +56,11 @@ st.sidebar.markdown(
 
 
 # Set session state and check if the DataFrame exists
-if 'time_features' in st.session_state:
-    df = st.session_state.time_features  # Retrieve the DataFrame from session state
+if 'time_features'or'frequency_features'or'time_frequency_features' in st.session_state:
+    time_features = st.session_state.time_features
+    frequency_features=st.session_state.frequency_features
+    time_frequency_features=st.session_state.time_frequency_features
+
 elif 'time_domain_features.jsonl' in os.listdir('outputs\\Gold'):
 
     time_features_file_path = 'outputs\\Gold\\time_domain_features.jsonl'
@@ -89,9 +92,7 @@ else:
 start_time = time.time()
 
 # Create a form for user input
-time_features = st.session_state.time_features
-frequency_features=st.session_state.frequency_features
-time_frequency_features=st.session_state.time_frequency_features
+
 
 with st.form("selection_form"):
     # Selectbox for level 1 (identifier)
@@ -101,7 +102,7 @@ with st.form("selection_form"):
     if level1_options:
         time_features_filtered_df = time_features[time_features['identifier'] == level1_options]
         frequency_features_filtered_df = frequency_features[frequency_features['identifier'] == level1_options]
-        time_frequency_features_filtered_df = time_frequency_features[time_features_filtered_df['identifier'] == level1_options]
+        time_frequency_features_filtered_df = time_frequency_features[time_frequency_features['identifier'] == level1_options]
 
         # Selectbox for level 2 (timestamp)
         level2_options = st.selectbox('Select Level 2 (timestamp):', time_features_filtered_df['timestamp'].unique())
@@ -130,7 +131,14 @@ with st.form("selection_form"):
             # x_axis_wavelet_magnitude = time_frequency_features_filtered_df.iloc[0]['channel_x_wavelet_magnitude']
             # y_axis_wavelet_magnitude = time_frequency_features_filtered_df.iloc[0]['channel_y_wavelet_magnitude']
 
-            #identifiers = ['identifier', 'bearing', 'split', 'timestamp', 'channel_x', 'channel_y', 'channel_x_z_scores', 'channel_y_z_scores']
+            time_features_identifiers = ['identifier', 'bearing',  'timestamp', 'channel_x_z_scores', 'channel_y_z_scores','Millisec', 'channel_x','channel_y','split_Bearing1','split_Bearing2','split_Bearing3']
+            frequency_features_identifiers = ['identifier', 'bearing', 'timestamp', 'Millisec', 'channel_x','channel_y','channel_x_fft_magnitude', 'channel_x_fft_freq', 'channel_y_fft_magnitude', 'channel_y_fft_freq','split_Bearing1','split_Bearing2','split_Bearing3']
+            time_frequency_features_identifiers = ['identifier', 'bearing', 'timestamp','Millisec', 'channel_x','channel_y', 'channel_x_stft_magnitude', 'channel_x_stft_frequency', 'channel_x_stft_time', 'channel_y_stft_magnitude', 'channel_y_stft_frequency', 'channel_y_stft_time','split_Bearing1','split_Bearing2','split_Bearing3']
+
+            time_features_filtered_df = time_features_filtered_df.drop(columns= time_features_identifiers)
+            frequency_features_filtered_df = frequency_features_filtered_df.drop(columns=frequency_features_identifiers)
+            time_frequency_features_filtered_df = time_frequency_features_filtered_df.drop(columns=time_frequency_features_identifiers)
+
             #filtered_df = filtered_df.drop(columns=identifiers)
 
     # Submit button for the form
@@ -143,6 +151,7 @@ if submitted and level1_options and level2_options:
     with tab1:
         tab1.header("X-axis Time Series")
         tab1.line_chart(x_axis_time_series)
+        st.dataframe(time_features_filtered_df)
 
         tab1.header("X-axis FFT")
         fft_x_df = pd.DataFrame({
@@ -150,6 +159,7 @@ if submitted and level1_options and level2_options:
                 'Magnitude': x_axis_fft_magnitude
             })
         tab1.line_chart(fft_x_df.set_index('Frequency (Hz)'))
+        st.dataframe(frequency_features_filtered_df)
 
         tab1.header("X-axis STFT")
         fig1, ax1 = plt.subplots()
@@ -158,12 +168,14 @@ if submitted and level1_options and level2_options:
         ax1.set_ylabel('Frequency [Hz]')
         ax1.set_xlabel('Time [sec]')
         tab1.pyplot(fig1)
+        st.dataframe(time_frequency_features_filtered_df)
                         
 
     with tab2:
 
         tab2.header("Y-axis frequency chart")
         tab2.line_chart(y_axis_time_series)
+        st.dataframe(time_features_filtered_df)
 
         tab2.header("Y-axis FFT")
         fft_y_df = pd.DataFrame({
@@ -171,6 +183,7 @@ if submitted and level1_options and level2_options:
             'Magnitude': y_axis_fft_magnitude
         })
         tab2.line_chart(fft_y_df.set_index('Frequency (Hz)'))
+        st.dataframe(frequency_features_filtered_df)
 
         tab2.header("Y-axis STFT")
         fig2, ax2 = plt.subplots()
@@ -179,6 +192,7 @@ if submitted and level1_options and level2_options:
         ax2.set_ylabel('Frequency [Hz]')
         ax2.set_xlabel('Time [sec]')
         tab2.pyplot(fig2)
+        st.dataframe(time_frequency_features_filtered_df)
 
 
 
