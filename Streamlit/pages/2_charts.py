@@ -56,7 +56,7 @@ st.sidebar.markdown(
 
 
 # Set session state and check if the DataFrame exists
-if 'time_features'or'frequency_features'or'time_frequency_features' in st.session_state:
+if 'time_features' in st.session_state:
     time_features = st.session_state.time_features
     frequency_features=st.session_state.frequency_features
     time_frequency_features=st.session_state.time_frequency_features
@@ -131,13 +131,23 @@ with st.form("selection_form"):
             # x_axis_wavelet_magnitude = time_frequency_features_filtered_df.iloc[0]['channel_x_wavelet_magnitude']
             # y_axis_wavelet_magnitude = time_frequency_features_filtered_df.iloc[0]['channel_y_wavelet_magnitude']
 
-            time_features_identifiers = ['identifier', 'bearing',  'timestamp', 'channel_x_z_scores', 'channel_y_z_scores','Millisec', 'channel_x','channel_y','split_Bearing1','split_Bearing2','split_Bearing3']
-            frequency_features_identifiers = ['identifier', 'bearing', 'timestamp', 'Millisec', 'channel_x','channel_y','channel_x_fft_magnitude', 'channel_x_fft_freq', 'channel_y_fft_magnitude', 'channel_y_fft_freq','split_Bearing1','split_Bearing2','split_Bearing3']
-            time_frequency_features_identifiers = ['identifier', 'bearing', 'timestamp','Millisec', 'channel_x','channel_y', 'channel_x_stft_magnitude', 'channel_x_stft_frequency', 'channel_x_stft_time', 'channel_y_stft_magnitude', 'channel_y_stft_frequency', 'channel_y_stft_time','split_Bearing1','split_Bearing2','split_Bearing3']
+            # time_features_identifiers = ['identifier', 'bearing',  'timestamp', 'channel_x_z_scores', 'channel_y_z_scores','Millisec', 'channel_x','channel_y','split_Bearing1','split_Bearing2','split_Bearing3']
+            # frequency_features_identifiers = ['identifier', 'bearing', 'timestamp', 'Millisec', 'channel_x','channel_y','channel_x_fft_magnitude', 'channel_x_fft_freq', 'channel_y_fft_magnitude', 'channel_y_fft_freq','split_Bearing1','split_Bearing2','split_Bearing3']
+            # time_frequency_features_identifiers = ['identifier', 'bearing', 'timestamp','Millisec', 'channel_x','channel_y', 'channel_x_stft_magnitude', 'channel_x_stft_frequency', 'channel_x_stft_time', 'channel_y_stft_magnitude', 'channel_y_stft_frequency', 'channel_y_stft_time','split_Bearing1','split_Bearing2','split_Bearing3']
 
-            time_features_filtered_df = time_features_filtered_df.drop(columns= time_features_identifiers)
-            frequency_features_filtered_df = frequency_features_filtered_df.drop(columns=frequency_features_identifiers)
-            time_frequency_features_filtered_df = time_frequency_features_filtered_df.drop(columns=time_frequency_features_identifiers)
+            # time_features_identifiers= [col for col in time_features_df.columns]
+            # time_features_identifiers=st.multiselect('Time Domain Features', time_features_identifiers)
+
+            # frequency_features_identifiers = [col for col in frequency_features_df.columns]
+            # frequency_features_identifiers=st.multiselect('Frequency Domain Features', frequency_features_identifiers)
+
+            # time_frequency_features_identifiers = [col for col in time_frequency_features_df.columns]
+            # time_frequency_features_identifiers=st.multiselect('Time Frequency Domain Features', time_frequency_features_identifiers)
+
+
+            # time_features_filtered_df = time_features_filtered_df.drop(columns= time_features_identifiers)
+            # frequency_features_filtered_df = frequency_features_filtered_df.drop(columns=frequency_features_identifiers)
+            # time_frequency_features_filtered_df = time_frequency_features_filtered_df.drop(columns=time_frequency_features_identifiers)
 
             #filtered_df = filtered_df.drop(columns=identifiers)
 
