@@ -4,6 +4,7 @@ import sys
 import time
 import pandas as pd
 import matplotlib.pyplot as plt
+import re
 
 # Adjust the system path to access your pipelines
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
@@ -131,13 +132,22 @@ with st.form("selection_form"):
             # x_axis_wavelet_magnitude = time_frequency_features_filtered_df.iloc[0]['channel_x_wavelet_magnitude']
             # y_axis_wavelet_magnitude = time_frequency_features_filtered_df.iloc[0]['channel_y_wavelet_magnitude']
 
-            time_features_identifiers = ['identifier', 'bearing',  'timestamp', 'channel_x_z_scores', 'channel_y_z_scores','Millisec', 'channel_x','channel_y','split_Bearing1','split_Bearing2','split_Bearing3']
-            frequency_features_identifiers = ['identifier', 'bearing', 'timestamp', 'Millisec', 'channel_x','channel_y','channel_x_fft_magnitude', 'channel_x_fft_freq', 'channel_y_fft_magnitude', 'channel_y_fft_freq','split_Bearing1','split_Bearing2','split_Bearing3']
-            time_frequency_features_identifiers = ['identifier', 'bearing', 'timestamp','Millisec', 'channel_x','channel_y', 'channel_x_stft_magnitude', 'channel_x_stft_frequency', 'channel_x_stft_time', 'channel_y_stft_magnitude', 'channel_y_stft_frequency', 'channel_y_stft_time','split_Bearing1','split_Bearing2','split_Bearing3']
-
-            time_features_filtered_df = time_features_filtered_df.drop(columns= time_features_identifiers)
-            frequency_features_filtered_df = frequency_features_filtered_df.drop(columns=frequency_features_identifiers)
-            time_frequency_features_filtered_df = time_frequency_features_filtered_df.drop(columns=time_frequency_features_identifiers)
+            time_features_identifiers = ['identifier', 'bearing',  'timestamp', 'channel_x_z_scores', 'channel_y_z_scores','Millisec', 'channel_x','channel_y','split']
+            frequency_features_identifiers = ['identifier', 'bearing', 'timestamp', 'Millisec', 'channel_x','channel_y','channel_x_fft_magnitude', 'channel_x_fft_freq', 'channel_y_fft_magnitude', 'channel_y_fft_freq','split']
+            time_frequency_features_identifiers = ['identifier', 'bearing', 'timestamp','Millisec', 'channel_x','channel_y', 'channel_x_stft_magnitude', 'channel_x_stft_frequency', 'channel_x_stft_time', 'channel_y_stft_magnitude', 'channel_y_stft_frequency', 'channel_y_stft_time','split']
+            
+            #time_features_identifiers = [col for col in time_features_filtered_df.columns 
+                                        #if re.search(r'anomalies|mean|median|std|var|skew|kurtosis|rms|ptp|crest|energy|entropy', col)]
+            
+            #frequency_features_identifiers = [col for col in time_features_filtered_df.columns 
+                                        #if re.search(r'spectrum|mean|std|max|envelope|cepstrum|phase', col)]
+            
+            #time_frequency_features_identifiers = [col for col in time_features_filtered_df.columns 
+                                        #if re.search(r'scores|anomalies|mean|std|max', col)]
+            
+            time_features_filtered_df = time_features_filtered_df[time_features_identifiers]
+            frequency_features_filtered_df = frequency_features_filtered_df[[frequency_features_identifiers]]
+            time_frequency_features_filtered_df = time_frequency_features_filtered_df[[time_frequency_features_identifiers]]
 
             #filtered_df = filtered_df.drop(columns=identifiers)
 
