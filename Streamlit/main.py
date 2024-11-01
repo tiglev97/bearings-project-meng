@@ -68,7 +68,7 @@ col1, col2 = st.columns(2)
 with col1:
     with st.expander("Key Features"):
         st.markdown("""
-        <div style="background-color:#ffe0b2;padding:20px;border-radius:20px;">
+        <div>
         <ul style="font-size:16px;line-height:1.8;">
             <li><strong>Data Upload & Preprocessing</strong>: Upload data in multiple formats, clean and preprocess it with built-in tools.</li>
             <li><strong>Model Selection & Training</strong>: Choose from predefined ML/DL models for anomaly detection or customize your own model.</li>
@@ -84,7 +84,7 @@ with col1:
 with col2:
     with st.expander("Target Audience"):
         st.markdown("""
-        <div style="background-color:#ffccbc;padding:20px;border-radius:10px;">
+        <div>
         <p style="font-size:16px;line-height:1.6;">
             The platform is designed for data scientists, analysts, and business professionals who need an accessible and reliable tool for detecting anomalies in their data. 
             It’s especially useful for industries that require real-time anomaly detection, such as finance, manufacturing, and healthcare.
