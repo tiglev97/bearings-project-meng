@@ -307,6 +307,9 @@ if uploaded_file is not None:
                     # Store the cleaned DataFrame in session state
                     st.session_state.cleaned_df = cleaned_df
 
+                    #output csv file for cleaned data
+                    cleaned_df.to_excel("outputs\\Silver\\cleaned_df.xlsx", index=False)
+
                     if "cleaned_df" in st.session_state:
                         cleaned_df = st.session_state.cleaned_df
                     elif "cleaned_df.json1" in os.listdir("outputs\\Silver"):
@@ -314,6 +317,10 @@ if uploaded_file is not None:
                         loading = st.empty()
                         loading.info("Loading the file...")
                         cleaned_df = jsonl_to_dataframe(file_path)
+                        
+
+                        
+
                         st.session_state.cleaned_df = cleaned_df
                         loading.empty()
                     else:
@@ -360,12 +367,9 @@ if uploaded_file is not None:
 
                     #print the length of fft_magnitude and fft_frequency
                     st.dataframe(frequency_features['channel_x_fft_magnitude'].apply(lambda x: len(x)))
-                    st.dataframe(frequency_features['channel_x_fft_phase'].apply(lambda x: len(x)))
+                    # st.dataframe(frequency_features['channel_x_fft_phase'].apply(lambda x: len(x)))
                     st.dataframe(frequency_features['channel_x_fft_freq'].apply(lambda x: len(x)))
      
-
-  
-
                     st.write("Number of time features:", len(time_features))
                     st.write("Features extracted successfully")
 
@@ -373,14 +377,19 @@ if uploaded_file is not None:
 # Function to delete temporary files
 def delete_files():
     for file in os.listdir("outputs\\Bronze"):
+        #ignore txt file
+        if file.endswith(".txt"):
+            continue
         os.remove(os.path.join("outputs\\Bronze", file))
+
     for file in os.listdir("outputs\\Silver"):
+        if file.endswith(".txt"):
+            continue
         os.remove(os.path.join("outputs\\Silver", file))
     for file in os.listdir("outputs\\Gold"):
+        if file.endswith(".txt"):
+            continue
         os.remove(os.path.join("outputs\\Gold", file))
-
-
-
 
 
 # Button to clear files
