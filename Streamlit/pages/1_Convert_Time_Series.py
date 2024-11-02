@@ -79,10 +79,10 @@ st.sidebar.markdown(
 )
 
 
-@st.cache_data()
+# @st.cache_data()
 def process_zip_file(zip_file):
     try:
-        # Process the ZIP file to generate JSONL files
+        # Process the ZIP file to generate Bronze JSONL files
         data_entry(zip_file)
 
         # Retrieve the list of processed JSONL files
@@ -233,7 +233,16 @@ def extract_features_from_cleaned_data(cleaned_df):
 # st.title("AUTO ML")
 
 # Upload ZIP file
-uploaded_file = st.file_uploader("📂 Choose a ZIP file", type="zip")
+with st.form("my-form", clear_on_submit=True):
+        uploaded_file = st.file_uploader("📂 Choose a ZIP file", type="zip")
+        submitted = st.form_submit_button("UPLOAD")
+
+        if submitted:
+            if uploaded_file is None:
+                st.error("⚠️ Please upload a ZIP file.")
+                st.stop()
+            else:
+                uploaded_file.key = st.session_state.session_id
 
 # If a ZIP file is uploaded
 if uploaded_file is not None:
@@ -298,6 +307,9 @@ if uploaded_file is not None:
                     # Store the cleaned DataFrame in session state
                     st.session_state.cleaned_df = cleaned_df
 
+                    #output csv file for cleaned data
+                    cleaned_df.to_excel("outputs\\Silver\\cleaned_df.xlsx", index=False)
+
                     if "cleaned_df" in st.session_state:
                         cleaned_df = st.session_state.cleaned_df
                     elif "cleaned_df.json1" in os.listdir("outputs\\Silver"):
@@ -305,6 +317,10 @@ if uploaded_file is not None:
                         loading = st.empty()
                         loading.info("Loading the file...")
                         cleaned_df = jsonl_to_dataframe(file_path)
+                        
+
+                        
+
                         st.session_state.cleaned_df = cleaned_df
                         loading.empty()
                     else:
@@ -348,7 +364,12 @@ if uploaded_file is not None:
                     st.write(frequency_features.head())
                     st.write("Time Frequency Features:")
                     st.write(time_frequency_features.head())
-                    
+
+                    #print the length of fft_magnitude and fft_frequency
+                    st.dataframe(frequency_features['channel_x_fft_magnitude'].apply(lambda x: len(x)))
+                    # st.dataframe(frequency_features['channel_x_fft_phase'].apply(lambda x: len(x)))
+                    st.dataframe(frequency_features['channel_x_fft_freq'].apply(lambda x: len(x)))
+     
                     st.write("Number of time features:", len(time_features))
                     st.write("Features extracted successfully")
 
@@ -356,14 +377,28 @@ if uploaded_file is not None:
 # Function to delete temporary files
 def delete_files():
     for file in os.listdir("outputs\\Bronze"):
+        #ignore txt file
+        if file.endswith(".txt"):
+            continue
         os.remove(os.path.join("outputs\\Bronze", file))
-    for file in os.listdir("outputs\\Silver"):
-        os.remove(os.path.join("outputs\\Silver", file))
 
-    st.session_state.checked_df = None
+    for file in os.listdir("outputs\\Silver"):
+        if file.endswith(".txt"):
+            continue
+        os.remove(os.path.join("outputs\\Silver", file))
+    for file in os.listdir("outputs\\Gold"):
+        if file.endswith(".txt"):
+            continue
+        os.remove(os.path.join("outputs\\Gold", file))
 
 
 # Button to clear files
 if st.button("🗑️ Clear Temporary Files"):
     delete_files()
     st.success("🧹 Temporary files cleared!")
+    # uploaded_file.empty()
+    st.rerun()
+
+
+
+

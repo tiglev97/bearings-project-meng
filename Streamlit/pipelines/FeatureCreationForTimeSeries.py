@@ -328,11 +328,11 @@ def frequency_domain_features(df, channel_columns=["channel_x", "channel_y"]):
             df[f"{channel}_fft_phase"] = df[f"{channel}_fft"].apply(
                 lambda x: np.angle(x)[: len(x) // 2]
             )
-
             # Compute the frequencies corresponding to the FFT values
             n = (
                 df[channel].apply(len).iloc[0]
-            )  # Assuming all signals have the same length
+            )  
+            # use milliseconds to find the sample rate 
             freq = np.fft.fftfreq(n, d=1 / 25600)[: n // 2]
             df[f"{channel}_fft_freq"] = [freq] * len(
                 df
