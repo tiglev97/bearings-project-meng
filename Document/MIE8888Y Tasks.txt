@@ -39,5 +39,11 @@ Sept 25
 ##Oct.29th/2024##
 1. Add a page in PPT to show any existing pipelines similar to our project and their pros/cons
 2. Fix page2 - charts
-3. Add more intro and guidelines in the main-page
-4. Study traditional-clustering technique and Ray,React,Flask framework
+3. Add more intro and guidelines on the main page
+4. Study traditional clustering techniques and Ray, React, and Flask framework
+
+##Nov.5th/2024##
+1. Use the extracted feature to do traditional clustering, not raw time-series
+  - combine all three features but drop nested data save in the Gold Folder
+2. Study Ray Tune in Linux and Windows for Deep Learning Hyperparameter Tunning
+3. Write K-mean and DBSCAN code for features-only dataset
