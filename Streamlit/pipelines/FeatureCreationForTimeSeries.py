@@ -225,6 +225,9 @@ class DataCleanPipeline:
                 lambda z: np.any(np.abs(z) > threshold)
             )
 
+            # Remove rows with anomalies
+            # self.df = self.df[~self.df[f"{column}_anomalies"]]
+
             if self.df[f"{column}_anomalies"].any():
                 logging.error(f"Anomalies detected in column '{column}':")
                 logging.error(self.df[self.df[f"{column}_anomalies"]])
@@ -455,23 +458,23 @@ def time_frequency_features(df, channel_columns=["channel_x", "channel_y"]):
     return df
  
 
-def extract_features(df, channel_columns=["channel_x", "channel_y"]):
+def extract_features(cleaned_df, channel_columns=["channel_x", "channel_y"]):
 
     # Extract time-domain features
-    cleaned_df = df.copy()
+    # cleaned_df = df.copy()
     time_domain_feature_df = time_domain_features(cleaned_df, channel_columns)
 
-    # Extract frequency-domain features
-    cleaned_df=df.copy()
-    frequency_domain_features_df = frequency_domain_features(cleaned_df, channel_columns)
+    # # Extract frequency-domain features
+    # # cleaned_df=df.copy()
+    # frequency_domain_features_df = frequency_domain_features(cleaned_df, channel_columns)
 
-    # Extract time-frequency domain features
-    cleaned_df = df.copy()
-    time_frequency_features_df = time_frequency_features(cleaned_df, channel_columns)
+    # # Extract time-frequency domain features
+    # # cleaned_df = df.copy()
+    # time_frequency_features_df = time_frequency_features(cleaned_df, channel_columns)
 
     # return time_domain_feature_df
 
-    return time_domain_feature_df, frequency_domain_features_df,time_frequency_features_df
+    return time_domain_feature_df
 
 
 # # Usage example

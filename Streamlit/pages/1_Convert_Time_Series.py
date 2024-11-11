@@ -222,12 +222,12 @@ def extract_features_from_cleaned_data(cleaned_df):
         )  # Update the placeholder with completion message
 
     # Perform actual feature extraction
-    time_domain_features,frequency_domain_features,time_frequency_domain_features = extract_features(cleaned_df)
-    # time_domain_features, time_frequency_domain_features = extract_features(cleaned_df)
+    # time_domain_features,frequency_domain_features,time_frequency_domain_features = extract_features(cleaned_df)
+    time_domain_features = extract_features(cleaned_df)
     log_messages.append("Feature extraction completed successfully.")
 
-    return time_domain_features, frequency_domain_features, time_frequency_domain_features
-    # return time_domain_features, time_frequency_domain_features
+    # return time_domain_features, frequency_domain_features, time_frequency_domain_features
+    return time_domain_features
 
 
 # st.title("AUTO ML")
@@ -329,17 +329,17 @@ if uploaded_file is not None:
 
                     # Extract features directly from cleaned_df
                     if "time_domain_features.jsonl" not in os.listdir("outputs\\Gold"):
-                        # time_features, time_frequency_features = extract_features_from_cleaned_data(cleaned_df)
+                        time_features = extract_features_from_cleaned_data(cleaned_df)
                         
-                        time_features,frequency_features,time_frequency_features= extract_features_from_cleaned_data(cleaned_df)
+                        # time_features,frequency_features,time_frequency_features= extract_features_from_cleaned_data(cleaned_df)
 
                         data_frame_to_jsonl(time_features, "time_domain_features", "Gold")  # Save extracted features
-                        data_frame_to_jsonl(frequency_features, 'frequency_domain_features', 'Gold')
-                        data_frame_to_jsonl(time_frequency_features, "time_frequency_features", "Gold")
+                        # data_frame_to_jsonl(frequency_features, 'frequency_domain_features', 'Gold')
+                        # data_frame_to_jsonl(time_frequency_features, "time_frequency_features", "Gold")
 
                         st.session_state.time_features = time_features
-                        st.session_state.frequency_features = frequency_features
-                        st.session_state.time_frequency_features = time_frequency_features
+                        # st.session_state.frequency_features = frequency_features
+                        # st.session_state.time_frequency_features = time_frequency_features
                         st.write("Features extracted successfully")
                     else:
                         loading = st.info("Loading the file...")
@@ -348,27 +348,27 @@ if uploaded_file is not None:
                         )
                         st.session_state.time_features = time_features
 
-                        frequency_features = jsonl_to_dataframe('outputs\\Gold\\frequency_domain_features.jsonl')
-                        st.session_state.frequency_features = frequency_features
+                        # frequency_features = jsonl_to_dataframe('outputs\\Gold\\frequency_domain_features.jsonl')
+                        # st.session_state.frequency_features = frequency_features
 
-                        time_frequency_features = jsonl_to_dataframe(
-                            "outputs\\Gold\\time_frequency_features.jsonl"
-                        )
-                        st.session_state.time_frequency_features = time_frequency_features
-                        loading.empty()
+                        # time_frequency_features = jsonl_to_dataframe(
+                        #     "outputs\\Gold\\time_frequency_features.jsonl"
+                        # )
+                        # st.session_state.time_frequency_features = time_frequency_features
+                        # loading.empty()
 
                     # Display the extracted features
                     st.write("Time Domain Features:")
                     st.write(time_features.head())
-                    st.write("Frequency Domain Features:")
-                    st.write(frequency_features.head())
-                    st.write("Time Frequency Features:")
-                    st.write(time_frequency_features.head())
+                    # st.write("Frequency Domain Features:")
+                    # st.write(frequency_features.head())
+                    # st.write("Time Frequency Features:")
+                    # st.write(time_frequency_features.head())
 
-                    #print the length of fft_magnitude and fft_frequency
-                    st.dataframe(frequency_features['channel_x_fft_magnitude'].apply(lambda x: len(x)))
-                    # st.dataframe(frequency_features['channel_x_fft_phase'].apply(lambda x: len(x)))
-                    st.dataframe(frequency_features['channel_x_fft_freq'].apply(lambda x: len(x)))
+                    # #print the length of fft_magnitude and fft_frequency
+                    # st.dataframe(frequency_features['channel_x_fft_magnitude'].apply(lambda x: len(x)))
+                    # # st.dataframe(frequency_features['channel_x_fft_phase'].apply(lambda x: len(x)))
+                    # st.dataframe(frequency_features['channel_x_fft_freq'].apply(lambda x: len(x)))
      
                     st.write("Number of time features:", len(time_features))
                     st.write("Features extracted successfully")
