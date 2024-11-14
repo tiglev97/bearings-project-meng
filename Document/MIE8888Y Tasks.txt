@@ -47,3 +47,8 @@ Sept 25
   - combine all three features but drop nested data save in the Gold Folder
 2. Study Ray Tune in Linux and Windows for Deep Learning Hyperparameter Tunning
 3. Write K-mean and DBSCAN code for features-only dataset
+
+##Nov.14th/2024##
+1. Apply supervised learning to tabuler data.
+  - break in to 25% each group (4 groups in total)
+2. Read papers from dahval
