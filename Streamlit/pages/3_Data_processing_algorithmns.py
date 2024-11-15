@@ -80,7 +80,7 @@ if algorithm == 'DBSCAN':
     st.write('DBSCAN')
     datafile= jsonl_to_dataframe(f'outputs/Gold/{dataset}')
     dbscan_df = PCA_DBSCAN(datafile)
-    
+        
     #generate scatter plot to show difference in clusters
     fig, ax = plt.subplots()
     sns.scatterplot(data=dbscan_df, x='PC1', y='PC2', hue='Cluster', palette='viridis', ax=ax)

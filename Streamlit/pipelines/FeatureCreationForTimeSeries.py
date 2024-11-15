@@ -300,6 +300,13 @@ def time_domain_features(df, channel_columns=["channel_x", "channel_y"]):
                 return -np.sum(pdf * np.log2(pdf))
 
             df[f"{channel}_entropy"] = df[channel].apply(compute_entropy)
+
+
+            #implement tsa (time synchronous averaging) to analyze the signal
+            #decompose the signal into trend, seasonal and residual
+            df[f"{channel}_trend"] = df[channel].apply(lambda x: seasonal_decompose(x, model='additive', period=1).trend)
+
+            
         else:
             logging.error(
                 f"Values in column '{channel}' are not in the expected list format."
@@ -355,13 +362,13 @@ def frequency_domain_features(df, channel_columns=["channel_x", "channel_y"]):
             # df[f'{channel}_fft_freq_max'] = df.apply(
             #     lambda row: row[f'{channel}_fft_freq'][np.argmax(row[f'{channel}_fft_magnitude'])], axis=1)
 
-            # # Compute spectral centroid
-            # df[f'{channel}_spectral_centroid'] = df.apply(
-            #     lambda row: np.sum(row[f'{channel}_fft_freq'] * row[f'{channel}_fft_magnitude']) / np.sum(row[f'{channel}_fft_magnitude']), axis=1)
+            # Compute spectral centroid
+            df[f'{channel}_spectral_centroid'] = df.apply(
+                lambda row: np.sum(row[f'{channel}_fft_freq'] * row[f'{channel}_fft_magnitude']) / np.sum(row[f'{channel}_fft_magnitude']), axis=1)
 
-            # # Compute spectral bandwidth
-            # df[f'{channel}_spectral_bandwidth'] = df.apply(
-            #     lambda row: np.sqrt(np.sum(((row[f'{channel}_fft_freq'] - row[f'{channel}_spectral_centroid']) ** 2) * row[f'{channel}_fft_magnitude']) / np.sum(row[f'{channel}_fft_magnitude'])), axis=1)
+            # Compute spectral bandwidth
+            df[f'{channel}_spectral_bandwidth'] = df.apply(
+                lambda row: np.sqrt(np.sum(((row[f'{channel}_fft_freq'] - row[f'{channel}_spectral_centroid']) ** 2) * row[f'{channel}_fft_magnitude']) / np.sum(row[f'{channel}_fft_magnitude'])), axis=1)
 
             # Compute analytic signal
             df[f"{channel}_analytic_signal"] = df[channel].apply(lambda x: hilbert(x))
@@ -458,23 +465,21 @@ def time_frequency_features(df, channel_columns=["channel_x", "channel_y"]):
     return df
  
 
-def extract_features(cleaned_df, channel_columns=["channel_x", "channel_y"]):
+def extract_features(df, channel_columns=["channel_x", "channel_y"]):
 
     # Extract time-domain features
-    # cleaned_df = df.copy()
+    cleaned_df = df.copy()
     time_domain_feature_df = time_domain_features(cleaned_df, channel_columns)
 
-    # # Extract frequency-domain features
-    # # cleaned_df=df.copy()
-    # frequency_domain_features_df = frequency_domain_features(cleaned_df, channel_columns)
+    # Extract frequency-domain features
+    cleaned_df=df.copy()
+    frequency_domain_features_df = frequency_domain_features(cleaned_df, channel_columns)
 
-    # # Extract time-frequency domain features
-    # # cleaned_df = df.copy()
-    # time_frequency_features_df = time_frequency_features(cleaned_df, channel_columns)
+    # Extract time-frequency domain features
+    cleaned_df = df.copy()
+    time_frequency_features_df = time_frequency_features(cleaned_df, channel_columns)
 
-    # return time_domain_feature_df
-
-    return time_domain_feature_df
+    return time_domain_feature_df, frequency_domain_features_df, time_frequency_features_df
 
 
 # # Usage example
