@@ -52,3 +52,8 @@ Sept 25
 1. Apply supervised learning to tabuler data.
   - break in to 25% each group (4 groups in total)
 2. Read papers from dahval
+
+##Nov.19th/2024##
+1. Create a Model zoo, for each model name, evaluation metric
+2. create an inspection page 
+3. Create a evaluation metric for cluster
