@@ -55,5 +55,9 @@ Sept 25
 
 ##Nov.19th/2024##
 1. Create a Model zoo, for each model name, evaluation metric
-2. create an inspection page 
-3. Create a evaluation metric for cluster
+2. create an inspection page
+  -
+3. Create an evaluation metric for cluster
+  - JS Divergence for each pair of clusters
+  - Wasserstein Distance
+  - Bhattacharyya Distance

@@ -4,6 +4,7 @@ import sys
 import time
 import pandas as pd
 import matplotlib.pyplot as plt
+import re
 
 # Adjust the system path to access your pipelines
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
