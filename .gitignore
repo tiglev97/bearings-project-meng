@@ -6,6 +6,6 @@ Data/Training/Bearing_1_1_acc/acc_00001.csv
 
 *.pyc
 
-pipelines/_pycache_
+_pycache_
 
 log.txt
