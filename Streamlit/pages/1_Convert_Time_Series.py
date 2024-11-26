@@ -223,11 +223,11 @@ def extract_features_from_cleaned_data(cleaned_df):
 
     # Perform actual feature extraction
     time_domain_features,frequency_domain_features,time_frequency_domain_features = extract_features(cleaned_df)
-    # time_domain_features, time_frequency_domain_features = extract_features(cleaned_df)
+    # time_domain_features = extract_features(cleaned_df)
     log_messages.append("Feature extraction completed successfully.")
 
     return time_domain_features, frequency_domain_features, time_frequency_domain_features
-    # return time_domain_features, time_frequency_domain_features
+    # return time_domain_features
 
 
 # st.title("AUTO ML")
@@ -317,10 +317,7 @@ if uploaded_file is not None:
                         loading = st.empty()
                         loading.info("Loading the file...")
                         cleaned_df = jsonl_to_dataframe(file_path)
-                        
-
-                        
-
+                
                         st.session_state.cleaned_df = cleaned_df
                         loading.empty()
                     else:
@@ -329,7 +326,7 @@ if uploaded_file is not None:
 
                     # Extract features directly from cleaned_df
                     if "time_domain_features.jsonl" not in os.listdir("outputs\\Gold"):
-                        # time_features, time_frequency_features = extract_features_from_cleaned_data(cleaned_df)
+                        # time_features = extract_features_from_cleaned_data(cleaned_df)
                         
                         time_features,frequency_features,time_frequency_features= extract_features_from_cleaned_data(cleaned_df)
 
@@ -365,10 +362,10 @@ if uploaded_file is not None:
                     st.write("Time Frequency Features:")
                     st.write(time_frequency_features.head())
 
-                    #print the length of fft_magnitude and fft_frequency
-                    st.dataframe(frequency_features['channel_x_fft_magnitude'].apply(lambda x: len(x)))
-                    # st.dataframe(frequency_features['channel_x_fft_phase'].apply(lambda x: len(x)))
-                    st.dataframe(frequency_features['channel_x_fft_freq'].apply(lambda x: len(x)))
+                    # #print the length of fft_magnitude and fft_frequency
+                    # st.dataframe(frequency_features['channel_x_fft_magnitude'].apply(lambda x: len(x)))
+                    # # st.dataframe(frequency_features['channel_x_fft_phase'].apply(lambda x: len(x)))
+                    # st.dataframe(frequency_features['channel_x_fft_freq'].apply(lambda x: len(x)))
      
                     st.write("Number of time features:", len(time_features))
                     st.write("Features extracted successfully")
