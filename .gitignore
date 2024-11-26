@@ -9,3 +9,5 @@ Data/Training/Bearing_1_1_acc/acc_00001.csv
 _pycache_
 
 log.txt
+
+*.xlsx
