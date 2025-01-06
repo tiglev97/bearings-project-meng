@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ConvertTimeSeries from './pages/FileUploaderPage';
-import Charts from './pages/PreviewVisualizationPage';
-import DataProcessingAlgorithms from './pages/DataProcessingAlgorithmnsPage';
-import ModelZoo from './pages/ModelZooPage';
+import FileUploader from './pages/1_FileUploaderPage';
+import PreviewVisualization from './pages/2_PreviewVisualizationPage';
+import DataProcessingAlgorithms from './pages/3_DataProcessingAlgorithmnsPage';
+import ModelZoo from './pages/4_ModelZooPage';
 import Main from './pages/Main';
 import Navigator from './components/Navigator'; // Assuming Sidebar is the correct name here
 import './index.css';
@@ -32,10 +32,10 @@ function App() {
         >
           <Routes>
             <Route path="/" element={<Main />} />
-            <Route path="/convert" element={<ConvertTimeSeries />} />
-            <Route path="/charts" element={<Charts />} />
-            <Route path="/data-processing" element={<DataProcessingAlgorithms />} />
-            <Route path="/model-zoo" element={<ModelZoo />} />
+            <Route path="/file_uploader" element={<FileUploader />} />
+            <Route path="/charts" element={<PreviewVisualization />} />
+            <Route path="/data_processing" element={<DataProcessingAlgorithms />} />
+            <Route path="/model_zoo" element={<ModelZoo />} />
           </Routes>
         </div>
       </div>

@@ -41,7 +41,7 @@ function Sidebar({ onToggle }) {
                 </Link>
               </li>
               <li style={styles.li}>
-                <Link to="/file-uploader" style={styles.link}>
+                <Link to="/file_uploader" style={styles.link}>
                   Convert Time Series
                 </Link>
               </li>
@@ -51,12 +51,12 @@ function Sidebar({ onToggle }) {
                 </Link>
               </li>
               <li style={styles.li}>
-                <Link to="/data-processing" style={styles.link}>
+                <Link to="/data_processing" style={styles.link}>
                   Data Processing
                 </Link>
               </li>
               <li style={styles.li}>
-                <Link to="/model-zoo" style={styles.link}>
+                <Link to="/model_zoo" style={styles.link}>
                   Model Zoo
                 </Link>
               </li>
