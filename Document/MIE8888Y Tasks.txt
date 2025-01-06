@@ -61,3 +61,11 @@ Sept 25
   - JS Divergence for each pair of clusters
   - Wasserstein Distance
   - Bhattacharyya Distance
+
+##Nov.26th/2024##
+1. Model Zoo Modification:
+  - Try diff number of cluster based on evaluation scores
+2. Study Deep Learning:
+  - Transformer - Timeseries
+  - CNN - Timeseries
+3. Build a doc to record DL papers
