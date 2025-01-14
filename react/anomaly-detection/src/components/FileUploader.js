@@ -3,11 +3,11 @@ import axios from 'axios';
 
 const FileUpload = () => {
   const [file, setFile] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState('');
+  const [uploadStatus, setUploadStatus] = useState('Please select a file before uploading!');
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]); // Select the file
-    setUploadStatus(''); // Reset upload status
+    setUploadStatus('Press the upload button to start uploading...'); // Reset upload status
   };
 
   const handleFileUpload = async () => {
@@ -16,18 +16,28 @@ const FileUpload = () => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file); // Append file to form data
-
     try {
       // Make a POST request to upload the file
-      const response = await axios.post('http://localhost:3000/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const zipFile= await file.arrayBuffer();
+      const binaryData= new Uint8Array(zipFile);
+      console.log(binaryData);
+      
+
+      const response = await axios.post(
+        "http://localhost:5000/FileUpload",
+        binaryData,
+        {
+          headers: {
+            "Content-Type": "application/octet-stream", // Specify binary content
+            "Content-Disposition": `attachment; filename="${file.name}"`,
+          },
+        }
+      );
+
       setUploadStatus(`Success: ${response.data.message}`);
-    } catch (error) {
+
+    } 
+    catch (error) {
       console.error('Error uploading file:', error);
       setUploadStatus('Error uploading file');
     }
@@ -38,11 +48,10 @@ const FileUpload = () => {
       <h1>Upload File to Temp Directory</h1>
       <input type="file" onChange={handleFileChange} style={styles.input} />
       <button onClick={handleFileUpload} style={styles.button}>
-        Upload
+        Upload 
       </button>
-        <p style={styles.status}>
-            {uploadStatus}
-        </p>
+      <p style={styles.status}>{uploadStatus}</p>
+
     </div>
   );
 };

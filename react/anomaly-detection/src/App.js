@@ -5,6 +5,7 @@ import PreviewVisualization from './pages/2_PreviewVisualizationPage';
 import DataProcessingAlgorithms from './pages/3_DataProcessingAlgorithmnsPage';
 import ModelZoo from './pages/4_ModelZooPage';
 import Main from './pages/Main';
+import Testpage from './pages/test';
 import Navigator from './components/Navigator'; // Assuming Sidebar is the correct name here
 import './index.css';
 
@@ -36,6 +37,7 @@ function App() {
             <Route path="/charts" element={<PreviewVisualization />} />
             <Route path="/data_processing" element={<DataProcessingAlgorithms />} />
             <Route path="/model_zoo" element={<ModelZoo />} />
+            <Route path="/test" element={<Testpage />} />
           </Routes>
         </div>
       </div>

@@ -60,6 +60,12 @@ function Sidebar({ onToggle }) {
                   Model Zoo
                 </Link>
               </li>
+              <li style={styles.li}>
+                <Link to="/test" style={styles.link}>
+                  Test Page
+                </Link>
+              </li>
+              
             </ul>
           </nav>
         </div>

@@ -1,6 +1,25 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 function Main() {
+  
+  const [data, setdata] = useState({test: ""});
+
+
+
+  useEffect(() => {
+    fetch("http://localhost:5000/test")
+      .then((response) => response.json())
+      .then((data) => {
+        setdata({
+          test: data.test
+        });
+        console.log(data);
+      });
+  }, []);
+
+
+
   return (
     <div style={{ padding: "20px" }}>
       {/* Title */}
@@ -29,15 +48,24 @@ function Main() {
         >
           <strong>C-more Anomaly Detection</strong> is a user-friendly web
           platform designed to automate the process of transforming raw data
-          into meaningful insights using advanced machine learning (ML) and
-          deep learning (DL) techniques. The platform focuses on anomaly
-          detection, helping users identify outliers or irregularities in their
-          data with minimal effort. The goal is to create a one-stop solution
-          that makes it easier for users, regardless of their technical
-          background, to analyze data and detect anomalies in real-time.
+          into meaningful insights using advanced machine learning (ML) and deep
+          learning (DL) techniques. The platform focuses on anomaly detection,
+          helping users identify outliers or irregularities in their data with
+          minimal effort. The goal is to create a one-stop solution that makes
+          it easier for users, regardless of their technical background, to
+          analyze data and detect anomalies in real-time.
         </p>
       </div>
 
+      {/* Test API */}
+
+      <div>
+        <h2 style={{ color: "#2c3e50", textAlign: "center" }}>Test API</h2>
+        <p style={{ fontSize: "16px", lineHeight: "1.6", color: "#333" }}>
+          Test API response: {data.test}
+        </p>
+      </div>
+      
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         {/* Key Features */}
         <div style={{ width: "48%" }}>
@@ -52,7 +80,9 @@ function Main() {
             >
               Key Features
             </summary>
-            <ul style={{ fontSize: "16px", lineHeight: "1.8", marginTop: "10px" }}>
+            <ul
+              style={{ fontSize: "16px", lineHeight: "1.8", marginTop: "10px" }}
+            >
               <li>
                 <strong>Data Upload & Preprocessing:</strong> Upload data in
                 multiple formats, clean and preprocess it with built-in tools.
@@ -68,9 +98,8 @@ function Main() {
                 interactive charts.
               </li>
               <li>
-                <strong>User Management & Collaboration:</strong> Save
-                projects, collaborate with team members, and share results
-                effortlessly.
+                <strong>User Management & Collaboration:</strong> Save projects,
+                collaborate with team members, and share results effortlessly.
               </li>
               <li>
                 <strong>Automation:</strong> Leverage automated data processing
