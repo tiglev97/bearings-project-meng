@@ -16,30 +16,18 @@ const FileUpload = () => {
       return;
     }
 
-    try {
-      // Make a POST request to upload the file
-      const zipFile= await file.arrayBuffer();
-      const binaryData= new Uint8Array(zipFile);
-      console.log(binaryData);
-      
+    const formData= new FormData();
+    formData.append('file',file)
 
-      const response = await axios.post(
-        "http://localhost:5000/FileUpload",
-        binaryData,
-        {
-          headers: {
-            "Content-Type": "application/octet-stream", // Specify binary content
-            "Content-Disposition": `attachment; filename="${file.name}"`,
-          },
-        }
-      );
+    try {
+      const response = await axios.post('http://localhost:5000/FileUpload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
       setUploadStatus(`Success: ${response.data.message}`);
-
-    } 
-    catch (error) {
+    } catch (error) {
       console.error('Error uploading file:', error);
-      setUploadStatus('Error uploading file');
+      setUploadStatus('Error uploading file.');
     }
   };
 

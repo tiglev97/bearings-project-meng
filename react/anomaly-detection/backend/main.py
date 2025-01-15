@@ -3,13 +3,18 @@ from flask_cors import CORS
 import os
 import io 
 import zipfile
+import tempfile
+
+from pipelines.DataEntry import data_entry
+
+
 
 app = Flask(__name__)
 CORS(app)
 
 database=[]
 
-UPLOAD_FOLDER= 'bearings-project-meng\\react\\anomaly-detection\\uploadFiles'
+UPLOAD_FOLDER= 'uploadFiles'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
 
@@ -44,29 +49,36 @@ def handle_data():
 
 @app.route('/FileUpload', methods=['Get','POST'])
 def fileUpload():
-    #read the binary data from request
-    file_data = request.data
-    file_name = request.headers.get('Content-Disposition', '').split('filename=')[-1].strip('"')
+    print("Headers:", request.headers)
+    print("Form Data:", request.form)
+    print('File:',request.files)
 
-    if not file_data:
-        return jsonify({"error": "No file data received"}), 400
-    
+
+    if not request.files:
+        return jsonify({"error": "No file part in request"}), 400
+
+    uploaded_file = request.files['file']
+
+    if uploaded_file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+
     try:
-        file_path=os.path.join(app.config['UPLOAD_FOLDER'],file_name)
-        with open(file_path,'wb') as file:
-            file.write(file_data)
+        # Read the uploaded file into memory
+        file_stream = io.BytesIO(uploaded_file.read())
+        
+        # Ensure the file is a valid ZIP file
+        if not zipfile.is_zipfile(file_stream):
+            return jsonify({"error": "Invalid ZIP file"}), 400
 
-        zip_file=zipfile.ZipFile(io.BytesIO(file_data))
-        file_list=zip_file.namelist()
-        zip_file.close()
-        print(file_list)
+        # Pass the file stream to data_entry
+        file_list = data_entry(file_stream)
 
         return jsonify({
             "message": "File uploaded and processed successfully",
-            "file_name": file_name,
-            "contents": file_list  # Return the file names inside the ZIP
+            "file_name": uploaded_file.filename,
+            "contents": file_list
         }), 200
-    
+
     except zipfile.BadZipFile:
         return jsonify({"error": "Invalid ZIP file"}), 400
     except Exception as e:
@@ -83,4 +95,4 @@ def anomalyDetectionUpload():
     return 'Anomaly Detection Upload'
 
 if __name__ == '__main__':
-    app.run(debug=True,port=5000)
+    app.run(debug=True)
