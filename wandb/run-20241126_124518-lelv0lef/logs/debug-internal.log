@@ -1,0 +1,19 @@
+{"time":"2024-11-26T12:45:18.3407821-05:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-11-26T12:45:18.3407821-05:00","level":"INFO","msg":"created symlink","path":"c:\\uoft\\Meng_project\\bearings-project-meng\\wandb\\run-20241126_124518-lelv0lef\\logs\\debug-core.log"}
+{"time":"2024-11-26T12:45:18.4784868-05:00","level":"INFO","msg":"created new stream","id":"lelv0lef"}
+{"time":"2024-11-26T12:45:18.4784868-05:00","level":"INFO","msg":"stream: started","id":"lelv0lef"}
+{"time":"2024-11-26T12:45:18.4784868-05:00","level":"INFO","msg":"handler: started","stream_id":"lelv0lef"}
+{"time":"2024-11-26T12:45:18.4784868-05:00","level":"INFO","msg":"sender: started","stream_id":"lelv0lef"}
+{"time":"2024-11-26T12:45:18.4784868-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"lelv0lef"}
+{"time":"2024-11-26T12:45:18.71839-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-11-26T12:45:19.2747997-05:00","level":"INFO","msg":"Pausing system monitor"}
+{"time":"2024-11-26T12:45:27.5201394-05:00","level":"INFO","msg":"Resuming system monitor"}
+{"time":"2024-11-26T12:45:27.5331097-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-11-26T12:45:27.5336144-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-11-26T12:45:28.5447815-05:00","level":"INFO","msg":"handler: operation stats","stats":{"operations":[{"desc":"saving job artifact","runtime_seconds":0.8838789}],"total_operations":1}}
+{"time":"2024-11-26T12:45:28.634979-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-11-26T12:45:29.7880495-05:00","level":"INFO","msg":"stream: closing","id":"lelv0lef"}
+{"time":"2024-11-26T12:45:29.7880495-05:00","level":"INFO","msg":"handler: closed","stream_id":"lelv0lef"}
+{"time":"2024-11-26T12:45:29.7880495-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"lelv0lef"}
+{"time":"2024-11-26T12:45:29.7880495-05:00","level":"INFO","msg":"sender: closed","stream_id":"lelv0lef"}
+{"time":"2024-11-26T12:45:29.7880495-05:00","level":"INFO","msg":"stream: closed","id":"lelv0lef"}
