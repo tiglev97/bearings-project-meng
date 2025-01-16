@@ -317,10 +317,7 @@ if uploaded_file is not None:
                         loading = st.empty()
                         loading.info("Loading the file...")
                         cleaned_df = jsonl_to_dataframe(file_path)
-                        
-
-                        
-
+                
                         st.session_state.cleaned_df = cleaned_df
                         loading.empty()
                     else:

@@ -55,5 +55,17 @@ Sept 25
 
 ##Nov.19th/2024##
 1. Create a Model zoo, for each model name, evaluation metric
-2. create an inspection page 
-3. Create a evaluation metric for cluster
+2. create an inspection page
+  -
+3. Create an evaluation metric for cluster
+  - JS Divergence for each pair of clusters
+  - Wasserstein Distance
+  - Bhattacharyya Distance
+
+##Nov.26th/2024##
+1. Model Zoo Modification:
+  - Try diff number of cluster based on evaluation scores
+2. Study Deep Learning:
+  - Transformer - Timeseries
+  - CNN - Timeseries
+3. Build a doc to record DL papers

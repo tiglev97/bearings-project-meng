@@ -472,7 +472,7 @@ def extract_features(df, channel_columns=["channel_x", "channel_y"]):
     time_domain_feature_df = time_domain_features(cleaned_df, channel_columns)
 
     # Extract frequency-domain features
-    cleaned_df=df.copy()
+    cleaned_df = df.copy()
     frequency_domain_features_df = frequency_domain_features(cleaned_df, channel_columns)
 
     # Extract time-frequency domain features
