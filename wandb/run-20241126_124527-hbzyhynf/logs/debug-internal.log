@@ -1,0 +1,17 @@
+{"time":"2024-11-26T12:45:29.7936014-05:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-11-26T12:45:29.7936014-05:00","level":"INFO","msg":"created symlink","path":"c:\\uoft\\Meng_project\\bearings-project-meng\\wandb\\run-20241126_124527-hbzyhynf\\logs\\debug-core.log"}
+{"time":"2024-11-26T12:45:29.928304-05:00","level":"INFO","msg":"created new stream","id":"hbzyhynf"}
+{"time":"2024-11-26T12:45:29.928304-05:00","level":"INFO","msg":"stream: started","id":"hbzyhynf"}
+{"time":"2024-11-26T12:45:29.928304-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"hbzyhynf"}
+{"time":"2024-11-26T12:45:29.928304-05:00","level":"INFO","msg":"sender: started","stream_id":"hbzyhynf"}
+{"time":"2024-11-26T12:45:29.928304-05:00","level":"INFO","msg":"handler: started","stream_id":"hbzyhynf"}
+{"time":"2024-11-26T12:45:30.1928362-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-11-26T12:46:48.5820112-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-11-26T12:46:48.5820112-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-11-26T12:46:49.0244323-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-11-26T12:46:49.1469347-05:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2024-11-26T12:46:50.1642341-05:00","level":"INFO","msg":"stream: closing","id":"hbzyhynf"}
+{"time":"2024-11-26T12:46:50.1642341-05:00","level":"INFO","msg":"handler: closed","stream_id":"hbzyhynf"}
+{"time":"2024-11-26T12:46:50.1642341-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"hbzyhynf"}
+{"time":"2024-11-26T12:46:50.1642341-05:00","level":"INFO","msg":"sender: closed","stream_id":"hbzyhynf"}
+{"time":"2024-11-26T12:46:50.1642341-05:00","level":"INFO","msg":"stream: closed","id":"hbzyhynf"}

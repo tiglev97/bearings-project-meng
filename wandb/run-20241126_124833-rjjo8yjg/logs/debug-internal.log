@@ -1,0 +1,17 @@
+{"time":"2024-11-26T12:48:35.1372379-05:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-11-26T12:48:35.1372379-05:00","level":"INFO","msg":"created symlink","path":"c:\\uoft\\Meng_project\\bearings-project-meng\\wandb\\run-20241126_124833-rjjo8yjg\\logs\\debug-core.log"}
+{"time":"2024-11-26T12:48:35.2705215-05:00","level":"INFO","msg":"created new stream","id":"rjjo8yjg"}
+{"time":"2024-11-26T12:48:35.2705215-05:00","level":"INFO","msg":"stream: started","id":"rjjo8yjg"}
+{"time":"2024-11-26T12:48:35.2705215-05:00","level":"INFO","msg":"writer: Do: started","stream_id":"rjjo8yjg"}
+{"time":"2024-11-26T12:48:35.2705215-05:00","level":"INFO","msg":"sender: started","stream_id":"rjjo8yjg"}
+{"time":"2024-11-26T12:48:35.2705215-05:00","level":"INFO","msg":"handler: started","stream_id":"rjjo8yjg"}
+{"time":"2024-11-26T12:48:35.4647165-05:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-11-26T12:48:36.0308323-05:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-11-26T12:48:36.0308323-05:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-11-26T12:48:37.0392798-05:00","level":"INFO","msg":"handler: operation stats","stats":{"operations":[{"desc":"uploading artifact run-rjjo8yjg-model_zoo","runtime_seconds":1.10219}],"total_operations":1}}
+{"time":"2024-11-26T12:48:38.1740679-05:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-11-26T12:48:39.45986-05:00","level":"INFO","msg":"stream: closing","id":"rjjo8yjg"}
+{"time":"2024-11-26T12:48:39.45986-05:00","level":"INFO","msg":"handler: closed","stream_id":"rjjo8yjg"}
+{"time":"2024-11-26T12:48:39.45986-05:00","level":"INFO","msg":"writer: Close: closed","stream_id":"rjjo8yjg"}
+{"time":"2024-11-26T12:48:39.45986-05:00","level":"INFO","msg":"sender: closed","stream_id":"rjjo8yjg"}
+{"time":"2024-11-26T12:48:39.45986-05:00","level":"INFO","msg":"stream: closed","id":"rjjo8yjg"}

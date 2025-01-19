@@ -10,7 +10,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 
 from pipelines.DataEntry import data_entry
 from pipelines.BronzeDataEntry import get_bronze_data_path
-from pipelines.JsonlConverter import jsonl_to_dataframe
 from pipelines.DataChecks import data_checks  # Import the data_checks function
 from pipelines.FeatureCreationForTimeSeries import DataCleanPipeline
 from pipelines.FeatureCreationForTimeSeries import extract_features
@@ -55,7 +54,7 @@ st.markdown(
     }
     footer {
         visibility: hidden;
-    }
+    }P
     </style>
     """,
     unsafe_allow_html=True,
