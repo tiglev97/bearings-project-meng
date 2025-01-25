@@ -27,6 +27,16 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
 
 
+#check if gold folder is empty
+if os.path.exists('outputs/Gold/time_domain_features.jsonl'):
+    time_features_file_path = 'outputs\\Gold\\time_domain_features.jsonl'
+    frequency_features_file_path = 'outputs\\Gold\\frequency_domain_features.jsonl'
+    time_frequency_features_file_path = 'outputs\\Gold\\time_frequency_domain_features.jsonl'
+
+    time_features = jsonl_to_dataframe(time_features_file_path)
+    frequency_features = jsonl_to_dataframe(frequency_features_file_path)
+    time_frequency_features = jsonl_to_dataframe(time_frequency_features_file_path)
+
 def process_zip_file(zip_file):
     try:
         # Process the ZIP file to generate Bronze JSONL files
@@ -177,14 +187,78 @@ def dataCleaning():
     
     return jsonify({"message": "Only POST requests are supported."}), 405
 
-@app.route('/AnomalyDetection')
-def anomalyDetection():
-    return 'Anomaly Detection'
 
-@app.route('/AnomalyDetection/Upload', methods=['POST'])
-def anomalyDetectionUpload():
-    print(request.files)
-    return 'Anomaly Detection Upload'
+@app.route('/DataVisualization/get-identifiers', methods=['GET'])
+def getIdentifiers():
+    identifiers = time_features['identifier'].unique().tolist()
+    return jsonify(identifiers)
+
+@app.route('/DataVisualization/get-timestamps', methods=['POST'])
+def getTimeStamps():
+    identifier = request.json.get('identifier')
+    timestamps = time_features[time_features['identifier'] == identifier]['timestamp'].unique().tolist()
+    return jsonify(timestamps)
+
+
+@app.route('/DataVisualization/get-data', methods=['POST'])
+def getFeatureData():
+    identifier = request.json.get('identifier')
+    timestamp = request.json.get('timestamp')
+
+    time_features_filtered_df = time_features[(time_features['identifier'] == identifier) &
+                                           (time_features['timestamp'] == timestamp)]
+    frequency_features_filtered_df = frequency_features[(frequency_features['identifier'] == identifier) &
+                                                     (frequency_features['timestamp'] == timestamp)]
+    time_frequency_features_filtered_df = time_frequency_features[(time_frequency_features['identifier'] == identifier) &
+                                                               (time_frequency_features['timestamp'] == timestamp)]
+
+    if time_features_filtered_df.empty or frequency_features_filtered_df.empty or time_frequency_features_filtered_df.empty:
+        return jsonify({'error': 'No data found for the selected identifier and timestamp.'}), 404
+
+
+    x_axis_time_series = time_features_filtered_df.iloc[0]['channel_x']
+    y_axis_time_series = time_features_filtered_df.iloc[0]['channel_y']
+
+    x_axis_fft_magnitude = frequency_features_filtered_df.iloc[0]['channel_x_fft_magnitude']
+    x_axis_fft_frequency = frequency_features_filtered_df.iloc[0]['channel_x_fft_freq']
+    y_axis_fft_magnitude = frequency_features_filtered_df.iloc[0]['channel_y_fft_magnitude']
+    y_axis_fft_frequency = frequency_features_filtered_df.iloc[0]['channel_y_fft_freq']
+
+    x_axis_stft_magnitude = time_frequency_features_filtered_df.iloc[0]['channel_x_stft_magnitude']
+    x_axis_stft_frequency = time_frequency_features_filtered_df.iloc[0]['channel_x_stft_frequency']
+    x_axis_stft_time= time_frequency_features_filtered_df.iloc[0]['channel_x_stft_time']
+    y_axis_stft_magnitude = time_frequency_features_filtered_df.iloc[0]['channel_y_stft_magnitude']
+    y_axis_stft_frequency = time_frequency_features_filtered_df.iloc[0]['channel_y_stft_frequency']
+    y_axis_stft_time= time_frequency_features_filtered_df.iloc[0]['channel_y_stft_time']
+
+    # Prepare the response
+    response = {
+        'tabl': {
+            'x_axis_time_series': list(x_axis_time_series) if hasattr(x_axis_time_series, '__iter__') else x_axis_time_series,
+            'time_features': time_features_filtered_df.to_dict(orient='records'),
+            'x_axis_fft_magnitude': list(x_axis_fft_magnitude),
+            'x_axis_fft_frequency': list(x_axis_fft_frequency),
+            'frequency_features': frequency_features_filtered_df.to_dict(orient='records'),
+            'x_axis_stft_magnitude': list(x_axis_stft_magnitude),
+            'x_axis_stft_frequency': list(x_axis_stft_frequency),
+            'x_axis_stft_time': list(x_axis_stft_time),
+            'time_frequency_features': time_frequency_features_filtered_df.to_dict(orient='records'),
+        },
+        'tabl2': {
+            'y_axis_time_series': list(y_axis_time_series) if hasattr(y_axis_time_series, '__iter__') else y_axis_time_series,
+            'time_features': time_features_filtered_df.to_dict(orient='records'),
+            'y_axis_fft_magnitude': list(y_axis_fft_magnitude),
+            'y_axis_fft_frequency': list(y_axis_fft_frequency),
+            'frequency_features': frequency_features_filtered_df.to_dict(orient='records'),
+            'y_axis_stft_magnitude': list(y_axis_stft_magnitude),
+            'y_axis_stft_frequency': list(y_axis_stft_frequency),
+            'y_axis_stft_time': list(y_axis_stft_time),
+            'time_frequency_features': time_frequency_features_filtered_df.to_dict(orient='records'),
+        }
+    }
+    
+
+    return jsonify(response)
 
 if __name__ == '__main__':
     app.run(debug=True)

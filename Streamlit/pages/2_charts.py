@@ -71,22 +71,19 @@ elif 'time_domain_features.jsonl' in os.listdir('outputs\\Gold'):
     loading=st.empty()
     loading.info("Loading the file...")
 
-    time_features_df = jsonl_to_dataframe(time_features_file_path)
-    st.session_state.time_features = time_features_df  # Save the DataFrame to session state
+    time_features = jsonl_to_dataframe(time_features_file_path)
+    st.session_state.time_features = time_features  # Save the DataFrame to session state
 
-    frequency_features_df = jsonl_to_dataframe(frequency_features_file_path)
-    st.session_state.frequency_features = frequency_features_df  # Save the DataFrame to session state
+    frequency_features = jsonl_to_dataframe(frequency_features_file_path)
+    st.session_state.frequency_features = frequency_features  # Save the DataFrame to session state
 
-    time_frequency_features_df = jsonl_to_dataframe(time_frequency_features_file_path)
-    st.session_state.time_frequency_features = time_frequency_features_df  # Save the DataFrame to session state
+    time_frequency_features = jsonl_to_dataframe(time_frequency_features_file_path)
+    st.session_state.time_frequency_features = time_frequency_features  # Save the DataFrame to session state
     
     loading.empty()
 else:
     st.error("No data available. Please run the data checks on the first page.")
     st.stop()  # Stop further execution if there is no data
-
-
-
 
 
 
