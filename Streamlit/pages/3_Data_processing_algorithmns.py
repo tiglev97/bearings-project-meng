@@ -7,6 +7,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import base64
+import json
+import matplotlib.pyplot as plt
+import pandas as pd
+import scipy.stats as st
+import numpy as np
 from io import BytesIO
 from PIL import Image
 
@@ -15,6 +20,10 @@ from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
+
+from tslearn.clustering import TimeSeriesKMeans
+from scipy.spatial.distance import jensenshannon
+from scipy.stats import wasserstein_distance
 
 #select the dataset to use
 #get the list from sliver and gold folders
@@ -28,7 +37,6 @@ def image_to_base64(img):
             img.save(buffer, "png")
             raw_base64 = base64.b64encode(buffer.getvalue()).decode()
             return f"data:image/png;base64,{raw_base64}"
-
 
 #-----------------DBSCAN-----------------
 # import pandas as pd
@@ -246,7 +254,10 @@ with st.form(key='processing_algorithm_form'):
         dict= str(dict).replace("'", '"')
 
 
-        #write the dictionary to the json file
+        # Ensure the Model_Zoo directory exists before saving
+        os.makedirs('outputs/Model_Zoo', exist_ok=True)
+
+# Write the dictionary to the jsonl file
         with open(f'outputs/Model_Zoo/{st.session_state.user_id}_Plots.jsonl', 'a') as f:
-            f.write(str(dict)+'\n')
+            f.write(str(dict) + '\n')
             f.close()
