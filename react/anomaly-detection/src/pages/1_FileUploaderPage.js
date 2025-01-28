@@ -12,20 +12,20 @@ function ConvertTimeSeries() {
         <FileUpload/>
       </div>
 
-      <div>
+      {/* <div>
         <h1>Data Check</h1>
         <DataValidator/>
-      </div>
+      </div> */}
 
       <div>
         <h1>Clean Time Series Data</h1>
         <DataCleaner/>
       </div>
 
-      <div>
+      {/* <div>
         <h1>Feature Engineering</h1>
         <FeatureEngineering/>
-      </div>
+      </div> */}
     </div>
   );
 }

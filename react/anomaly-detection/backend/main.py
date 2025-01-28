@@ -10,12 +10,15 @@ import pandas as pd
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+
 
 from pipelines.DataEntry import data_entry
 from pipelines.BronzeDataEntry import get_bronze_data_path
 from pipelines.JsonlConverter import jsonl_to_dataframe, data_frame_to_jsonl
 from pipelines.DataChecks import data_checks
 from pipelines.FeatureCreationForTimeSeries import DataCleanPipeline, extract_features
+from pipelines.MLAlgorithm import run_clustering
 
 app = Flask(__name__)
 CORS(app)
@@ -25,6 +28,12 @@ database=[]
 UPLOAD_FOLDER= 'uploadFiles'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
+
+DATASET_FOLDER_GOLD = 'outputs/Gold'
+DATASET_FOLDER_SILVER= 'outputs/Silver'
+
+
+print('Loading...')
 
 
 #check if gold folder is empty
@@ -83,6 +92,7 @@ def run_data_cleaning(checked_df, missing_value_strategy, scaling_method):
 def extract_features_from_cleaned_data(cleaned_df):
     time_domain_features,frequency_domain_features,time_frequency_domain_features = extract_features(cleaned_df)
     return time_domain_features,frequency_domain_features,time_frequency_domain_features
+
 
 @app.route('/')
 def index():
@@ -153,6 +163,9 @@ def fileUpload():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+# @app.route('/DataValidation', methods=['GET', 'POST'])
+# def dataValidation():
+
 @app.route('/DataCleaning', methods=['GET', 'POST'])
 def dataCleaning():
     if request.method == 'POST':
@@ -187,7 +200,6 @@ def dataCleaning():
     
     return jsonify({"message": "Only POST requests are supported."}), 405
 
-
 @app.route('/DataVisualization/get-identifiers', methods=['GET'])
 def getIdentifiers():
     identifiers = time_features['identifier'].unique().tolist()
@@ -198,7 +210,6 @@ def getTimeStamps():
     identifier = request.json.get('identifier')
     timestamps = time_features[time_features['identifier'] == identifier]['timestamp'].unique().tolist()
     return jsonify(timestamps)
-
 
 @app.route('/DataVisualization/get-data', methods=['POST'])
 def getFeatureData():
@@ -260,5 +271,64 @@ def getFeatureData():
 
     return jsonify(response)
 
+@app.route('/DataAlgorithmProcessing/get-datasets', methods=['GET'])
+def get_dataset():    
+    datasets = [f for f in os.listdir(DATASET_FOLDER_GOLD) if f.endswith('.jsonl')]
+    return jsonify(datasets)
+
+
+@app.route('/DataAlgorithmProcessing/run-algorithm', methods=['POST'])
+def run_algorithm():
+    data = request.json
+    dataset = data.get('dataset')
+    algorithm = data.get('algorithm')
+    params = data.get('params', {})
+
+    print("Dataset:", dataset)
+    print("Algorithm:", algorithm)
+    print("Params:", params)
+
+    # Validate dataset and algorithm
+    if not dataset:
+        return jsonify({"error": "Dataset is required"}), 400
+    if not algorithm:
+        return jsonify({"error": "Algorithm is required"}), 400
+
+    # Validate dataset file
+    file_path = os.path.join(DATASET_FOLDER_GOLD, dataset)
+    if not os.path.exists(file_path):
+        return jsonify({"error": f"Dataset file '{dataset}' not found in {DATASET_FOLDER_GOLD}"}), 400
+
+    # Load dataset
+    try:
+        df = jsonl_to_dataframe(file_path)
+        print("Dataframe loaded successfully")
+        print("Dataframe head:", df.head())  # Debugging
+        print("Dataframe shape:", df.shape)  # Debugging
+    except Exception as e:
+        print("Error loading dataset:", str(e))
+        return jsonify({"error": f"Failed to load dataset '{dataset}': {str(e)}"}), 500
+
+    # Validate algorithm parameters
+    if algorithm == "DBSCAN":
+        if "eps" not in params or "min_samples" not in params:
+            print("Missing DBSCAN parameters")  # Debugging
+            return jsonify({"error": "Parameters 'eps' and 'min_samples' are required for DBSCAN"}), 400
+    elif algorithm in ["K-means", "Gaussian Mixture"]:
+        if "n_clusters" not in params:
+            print("Missing clustering parameters")  # Debugging
+            return jsonify({"error": "Parameter 'n_clusters' is required for K-means and Gaussian Mixture"}), 400
+
+    # Run clustering
+    try:
+        result = run_clustering(df, algorithm, params)
+        print("Clustering result:", result)  # Debugging
+    except Exception as e:
+        print("Error in clustering:", str(e))  # Debugging
+        return jsonify({"error": f"Failed to run algorithm '{algorithm}': {str(e)}"}), 500
+
+    return jsonify(result)
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,host='localhost',port=5000)
