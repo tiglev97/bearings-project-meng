@@ -102,11 +102,11 @@ def handle_data():
     else:
         return jsonify({"error": "Invalid request method"}), 400
 
-@app.route('/FileUpload', methods=['Get','POST'])
+@app.route('/FileUpload', methods=['GET', 'POST'])
 def fileUpload():
     print("Headers:", request.headers)
     print("Form Data:", request.form)
-    print('File:',request.files)
+    print("File:", request.files)
 
     if 'file' not in request.files:
         return jsonify({"error": "No file part in request"}), 400
@@ -124,24 +124,33 @@ def fileUpload():
         if not zipfile.is_zipfile(file_stream):
             return jsonify({"error": "Invalid ZIP file"}), 400
 
-        # Pass the file stream to data_entry 
-        # file_list = data_entry(file_stream)
-        json_file_path=process_zip_file(file_stream)
+        # Process the ZIP file
+        json_file_path = process_zip_file(file_stream)
         if not json_file_path:
             return jsonify({"error": "Error processing ZIP file"}), 500
         
         # Run data checks on the processed JSONL files
         run_data_checks(json_file_path)
 
+        # Load the checked_df
+        file_path = os.path.join("outputs", "Silver", "checked_df.jsonl")
+        if not os.path.exists(file_path):
+            return jsonify({"error": "checked_df file not found"}), 404
+        
+        checked_df = pd.read_json(file_path, lines=True)
+        checked_df_json = checked_df.to_dict(orient='records')
+
         return jsonify({
             "message": "File uploaded and processed successfully",
             "file_name": uploaded_file.filename,
+            "checkedDf": checked_df_json  # Include checked_df in the response
         }), 200
 
     except zipfile.BadZipFile:
         return jsonify({"error": "Invalid ZIP file"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
     
 @app.route('/DataCleaning', methods=['GET', 'POST'])
 def dataCleaning():
@@ -155,26 +164,39 @@ def dataCleaning():
         print("Missing Value Strategy:", missing_value_strategy)
         print("Scaling Method:", scaling_method)
 
-        # Example response
-        response = {
-            "message": "Data cleaning settings applied successfully!",
-            "missingValueStrategy": missing_value_strategy,
-            "scalingMethod": scaling_method,
-        }
-        
         file_path = os.path.join("outputs", "Silver", "checked_df.jsonl")
-        checked_df = pd.read_json(file_path, lines=True)
-        cleaned_df = run_data_cleaning(checked_df, missing_value_strategy, scaling_method)
-        data_frame_to_jsonl(cleaned_df, "cleaned_df", "Silver")
+        try:
+            # Load checked_df and perform data cleaning
+            checked_df = pd.read_json(file_path, lines=True)
+            cleaned_df = run_data_cleaning(checked_df, missing_value_strategy, scaling_method)
+            data_frame_to_jsonl(cleaned_df, "cleaned_df", "Silver")
 
-        time_features,frequency_features,time_frequency_features= extract_features_from_cleaned_data(cleaned_df)
+            # Extract features
+            time_features, frequency_features, time_frequency_features = extract_features_from_cleaned_data(cleaned_df)
+            data_frame_to_jsonl(time_features, "time_domain_features", "Gold")
+            data_frame_to_jsonl(frequency_features, "frequency_domain_features", "Gold")
+            data_frame_to_jsonl(time_frequency_features, "time_frequency_domain_features", "Gold")
 
-        data_frame_to_jsonl(time_features, "time_domain_features", "Gold")
-        data_frame_to_jsonl(frequency_features, "frequency_domain_features", "Gold")
-        data_frame_to_jsonl(time_frequency_features, "time_frequency_domain_features", "Gold")
+            # Convert all features to JSON for response
+            time_features_json = time_features.to_dict(orient='records')
+            frequency_features_json = frequency_features.to_dict(orient='records')
+            time_frequency_features_json = time_frequency_features.to_dict(orient='records')
 
-        return jsonify(response), 200
-    
+            # Include all processed data in the response
+            response = {
+                "message": "Data cleaning settings applied successfully!",
+                "missingValueStrategy": missing_value_strategy,
+                "scalingMethod": scaling_method,
+                "timeFeatures": time_features_json,
+                "frequencyFeatures": frequency_features_json,
+                "timeFrequencyFeatures": time_frequency_features_json
+            }
+            return jsonify(response), 200
+        
+        except Exception as e:
+            print(f"Error during Data Cleaning: {e}")
+            return jsonify({"error": str(e)}), 500
+
     return jsonify({"message": "Only POST requests are supported."}), 405
 
 @app.route('/AnomalyDetection')
