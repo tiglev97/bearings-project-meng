@@ -15,24 +15,9 @@ from tslearn.clustering import TimeSeriesKMeans
 from scipy.spatial.distance import jensenshannon
 from scipy.stats import wasserstein_distance
 
-#Function to install packages if they are missing
-def install_if_missing(package_name):
-    try:
-        # Check if the package is already installed
-        importlib.import_module(package_name)
-        print(f"'{package_name}' is already installed.")
-    except ImportError:
-        # If not installed, install it
-        print(f"'{package_name}' is not installed. Installing now...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
-        
-        
-install_if_missing("chardet")
-install_if_missing("scikit-learn")
-
 
 #Sample data to work with
-json_file = "C:\\Users\\tigra\\OneDrive\\Documents\\cleaned_df.jsonl"
+json_file = "D:\MENG-Project\bearings-project-meng\Streamlit\outputs\Silver\\cleaned_df.jsonl"
 
 #Function to fix the data timestamp
 def fix_timestamp_format(ts):
@@ -50,7 +35,7 @@ def fix_timestamp_format(ts):
 
 ########################## Clustering function ########################
 
-def cluster_gear_json(file, truncation_factor=20, regularization=0.5):
+def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5):
     '''
 
     Parameters

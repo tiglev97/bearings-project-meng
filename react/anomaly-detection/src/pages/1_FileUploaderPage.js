@@ -1,15 +1,14 @@
 import FileUpload from '../components/FileUploader';
 import DataCleaner from '../components/DataCleaner';
-import DataValidator from '../components/DataValidator';
-import FeatureEngineering from '../components/FeatureEngineering';
 
 function ConvertTimeSeries() {
-
   return (
     <div>
+      {/* Step 1: File Upload */}
       <div>
-        <h1>Upload Time Series Data</h1>
-        <FileUpload/>
+        <h1>Step 1: Upload and Validate Data</h1>
+        <p>Upload your time series dataset in a valid ZIP format. The system will automatically validate the data for anomalies or errors.</p>
+        <FileUpload />
       </div>
 
       {/* <div>
