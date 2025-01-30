@@ -40,13 +40,38 @@ function DataProcessingAlgorithms() {
   };
 
   return (
-    <div>
-      <h1>Data Processing Algorithms</h1>
-      <DatasetSelector datasets={datasets} onSelect={setSelectedDataset} />
-      <AlgorithmSelector onSelect={setSelectedAlgorithm} onRun={handleRun} />
+    <div
+      style={{
+        textAlign: 'center',
+        backgroundImage: 'url(/gears.jpg)', // Directly reference the image in the public folder
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        minHeight: '100vh', // Ensure the background covers the entire viewport height
+      }}
+    >
+      <h1 style={{ fontSize: '60px', paddingTop: '50px' }}>Data Processing Algorithms</h1>
+  
+      {/* Explanation Text Box */}
+      <p style={{ fontSize: '19px', maxWidth: '700px', margin: '0 auto', padding: '10px', lineHeight: '1.6' }}>
+        This page allows you to select datasets and apply different data processing algorithms. You can choose
+        from a list of available datasets and select the algorithm you wish to run on the data. After the algorithm
+        finishes processing, the results will be displayed below for further analysis. (text can be changed)
+      </p>
+  
+      {/* DatasetSelector */}
+      <div style={{ marginBottom: '20px' }}>
+        <DatasetSelector datasets={datasets} onSelect={setSelectedDataset} />
+      </div>
+  
+      {/* AlgorithmSelector */}
+      <div style={{ marginBottom: '20px' }}>
+        <AlgorithmSelector onSelect={setSelectedAlgorithm} onRun={handleRun} />
+      </div>
+  
       {results && <ResultsDisplay results={results} />}
     </div>
   );
+  
 
 }
 

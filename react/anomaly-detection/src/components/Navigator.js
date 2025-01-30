@@ -70,6 +70,16 @@ function Sidebar({ onToggle }) {
           </nav>
         </div>
       )}
+
+      <div style={styles.imageContainer}>
+        <img
+          src="/logo.jpg" // Image located in the public folder
+          alt="Gears"
+          style={styles.sidebarImage}
+        />
+      </div>
+    
+
     </div>
   );
 }
@@ -118,6 +128,18 @@ const styles = {
     textDecoration: "none",
     color: "white",
     fontSize: "16px",
+  },
+  sidebarImage: {
+    width: "200px",
+    height: "auto",
+    borderRadius: "10px", 
+  },
+  imageContainer: {
+    position: "absolute", 
+    bottom: "10px",
+    width: "100%", 
+    textAlign: "center",
+    paddingBottom: "30px", 
   },
 };
 
