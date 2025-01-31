@@ -228,7 +228,8 @@ def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5, mode=
 
     # Calculate the regularized metric
     regularized_metric_x_cluster = jsd_sum_x_cluster - lambda_penalty * jsd_variance_x_cluster
-
+    
+    print("X Cluster")
     print(f"Sum of JSD values: {jsd_sum_x_cluster}")
     print(f"Variance of JSD values: {jsd_variance_x_cluster}")
     print(f"Regularized Clustering Metric: {regularized_metric_x_cluster}")
@@ -292,6 +293,7 @@ def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5, mode=
     # Calculate the regularized metric
     regularized_metric_y_cluster = jsd_sum_y_cluster - lambda_penalty * jsd_variance_y_cluster
     
+    print("Y Cluster")
     print(f"Sum of JSD values: {jsd_sum_y_cluster}")
     print(f"Variance of JSD values: {jsd_variance_y_cluster}")
     print(f"Regularized Clustering Metric: {regularized_metric_y_cluster}")
