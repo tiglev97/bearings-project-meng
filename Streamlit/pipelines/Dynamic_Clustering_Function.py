@@ -16,7 +16,7 @@ from scipy.spatial.distance import jensenshannon
 from scipy.stats import wasserstein_distance
 from sklearn.cluster import DBSCAN
 from tslearn.metrics import cdist_dtw
-
+from sklearn.mixture import GaussianMixture
 
 #Sample data to work with
 json_file = "C:\\Users\\tigra\\OneDrive\\Documents\\cleaned_df.jsonl"
@@ -191,6 +191,64 @@ def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5, mode=
         # Show plot
         plt.show()
         
+    if mode == 'GMM':
+        timestamps = []
+        channel_x = []
+        channel_y = []
+
+        with open(json_file, 'r') as file:
+            for line in file: 
+                try:
+                    data = json.loads(line)
+                    timestamps.append(data['timestamp'])
+                    channel_x.append(data['channel_x'])
+                    channel_y.append(data['channel_y'])
+                    #print(data)
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON: {e}")
+
+
+        time_series_data = pd.DataFrame({
+            'timestamp': timestamps,
+            'channel_x': channel_x,
+            'channel_y': channel_y})
+        
+        n_clusters = 4
+        data_x = np.array(time_series_data['channel_x'].tolist())
+        data_y = np.array(time_series_data['channel_y'].tolist())
+        
+        gmm_x = GaussianMixture(n_components=n_clusters, random_state=0)
+        gmm_y = GaussianMixture(n_components=n_clusters, random_state=0)
+        
+        clusters_x = gmm_x.fit_predict(data_x)
+        clusters_y = gmm_y.fit_predict(data_y)
+        
+        time_series_data['cluster_x'] = clusters_x
+        time_series_data['cluster_y'] = clusters_y
+        
+        
+        #Adjust timestamp
+        time_series_data['timestamp'] = time_series_data['timestamp'].apply(fix_timestamp_format)
+        
+        time_series_data['timestamp'] = pd.to_datetime(time_series_data['timestamp'])
+
+        plt.figure(figsize=(12, 6))
+
+        # Plot x cluster over time as dots
+        plt.scatter(time_series_data['timestamp'], time_series_data['cluster_x'], label='X Cluster', color='blue', alpha=0.7)
+
+        # Plot y cluster over time as dots
+        plt.scatter(time_series_data['timestamp'], time_series_data['cluster_y'], label='Y Cluster', color='red', alpha=0.7)
+
+        # Labels and title
+        plt.xlabel("Timestamp")
+        plt.ylabel("Cluster")
+        plt.title("X and Y Clusters Over Time Series (GMM)")
+        plt.legend()
+
+        # Show plot
+        plt.show()
+        
         
     #Implement Jensen Metrics
     lambda_penalty = regularization
@@ -258,6 +316,7 @@ def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5, mode=
     print(f"Sum of Wasserstein distances: {wasserstein_sum_x_cluster}")
     print(f"Variance of Wasserstein distances: {wasserstein_variance_x_cluster}")
     print(f"Regularized Clustering Metric (Wasserstein) for x_cluster: {regularized_metric_wasserstein_x_cluster}")
+    print()
     
     #Repeat the whole thing with y channel
 
@@ -326,5 +385,5 @@ def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5, mode=
         
 
 
-cluster_gear_json(json_file=json_file, truncation_factor=80, regularization=0.5, mode='DBSCAN')
+cluster_gear_json(json_file=json_file, truncation_factor=80, regularization=0.5, mode='GMM')
     
