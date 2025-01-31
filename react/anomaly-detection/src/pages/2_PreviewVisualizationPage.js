@@ -55,12 +55,21 @@ function PreviewVisualization() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Data Analysis Dashboard</h1>
+  
+    
+    <div style={{ 
+      textAlign: 'center',
+      backgroundImage: 'url(/gears.jpg)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      minHeight: '100vh',
+      }}>
+      
+      <h1 style={{fontSize: '60px', paddingTop: '50px', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}}>Data Analysis Dashboard</h1>
 
       {/* Identifier Dropdown */}
-      <label>
-        Select Identifier:
+      <label style ={{fontSize: '19px'}}>
+        Select Identifier:  
         <select value={selectedIdentifier} onChange={handleIdentifierChange}>
           <option value="">--Select--</option>
           {identifiers.map((id) => <option key={id} value={id}>{id}</option>)}

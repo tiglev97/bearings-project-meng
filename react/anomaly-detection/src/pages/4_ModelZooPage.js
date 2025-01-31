@@ -51,8 +51,16 @@ function ModelZoo() {
   };
 
   return (
-    <div className="model-zoo-container">
-      <h1>Model Zoo</h1>
+  
+    <div style={{ 
+      padding: "20px",
+      textAlign: 'center',
+      backgroundImage: 'url(/gears.jpg)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      minHeight: '100vh',}}>
+
+      <h1 style={{ fontSize: '60px', paddingTop: '10px' , textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}}>Model Zoo</h1>
       
       <div className="file-selector">
         <select

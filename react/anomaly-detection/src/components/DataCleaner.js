@@ -115,12 +115,15 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     gap: "1rem",
-    margin: "2rem",
+    margin: 'auto',
     padding: "1rem",
     border: "1px solid #ddd",
     borderRadius: "5px",
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    width: '60%',
   },
+
+
   button: {
     backgroundColor: "#007bff",
     color: "#fff",
@@ -129,6 +132,7 @@ const styles = {
     borderRadius: "5px",
     cursor: "pointer",
   },
+
   status: {
     color: "#555",
     fontSize: "1rem",
