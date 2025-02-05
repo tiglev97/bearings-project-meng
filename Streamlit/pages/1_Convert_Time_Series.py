@@ -344,7 +344,9 @@ if uploaded_file is not None:
                         )
                         st.session_state.time_features = time_features
 
-                        frequency_features = jsonl_to_dataframe('outputs\\Gold\\frequency_domain_features.jsonl')
+                        frequency_features = jsonl_to_dataframe(
+                            "outputs\\Gold\\frequency_domain_features.jsonl"
+                        )
                         st.session_state.frequency_features = frequency_features
 
                         time_frequency_features = jsonl_to_dataframe(

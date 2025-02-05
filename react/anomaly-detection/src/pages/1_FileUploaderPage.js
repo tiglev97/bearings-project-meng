@@ -1,4 +1,3 @@
-import React from 'react';
 import FileUpload from '../components/FileUploader';
 import DataCleaner from '../components/DataCleaner';
 
@@ -12,12 +11,20 @@ function ConvertTimeSeries() {
         <FileUpload />
       </div>
 
-      {/* Step 2: Clean Data */}
+      {/* <div>
+        <h1>Data Check</h1>
+        <DataValidator/>
+      </div> */}
+
       <div>
-        <h1>Step 2: Clean and Engineer Features</h1>
-        <p>Apply cleaning techniques such as handling missing values and scaling. Additionally, extract meaningful features from the cleaned time series data.</p>
-        <DataCleaner />
+        <h1>Clean Time Series Data</h1>
+        <DataCleaner/>
       </div>
+
+      {/* <div>
+        <h1>Feature Engineering</h1>
+        <FeatureEngineering/>
+      </div> */}
     </div>
   );
 }

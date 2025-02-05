@@ -1,155 +1,153 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { saveAs } from 'file-saver';
-import './App.css';
+import axios from 'axios';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 
-// Sample data - replace with actual data loading logic
-import timeFeatures from './data/timeFeatures.json'; // Need to confirm path value ******
-import frequencyFeatures from './data/frequencyFeatures.json'; // Need to confirm path value ******
-import timeFrequencyFeatures from './data/timeFrequencyFeatures.json'; // Need to confirm path value ******
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
-function App() {
-  const [selectedIdentifier, setSelectedIdentifier] = useState('');
-  const [selectedTimestamp, setSelectedTimestamp] = useState('');
-  const [filteredData, setFilteredData] = useState({});
+function PreviewVisualization() {
   const [identifiers, setIdentifiers] = useState([]);
+  const [selectedIdentifier, setSelectedIdentifier] = useState('');
   const [timestamps, setTimestamps] = useState([]);
-  const [activeTab, setActiveTab] = useState('x');
+  const [selectedTimestamp, setSelectedTimestamp] = useState('');
+  const [chartData, setChartData] = useState(null);
 
   useEffect(() => {
-    // Extract unique identifiers
-    const uniqueIdentifiers = [...new Set(timeFeatures.map(item => item.identifier))];
-    setIdentifiers(uniqueIdentifiers);
+    // Fetch identifiers on component mount
+    axios.get('http://localhost:5000/DataVisualization/get-identifiers')
+      .then((response) => setIdentifiers(response.data))
+      .catch((error) => console.error(error));
   }, []);
 
-  useEffect(() => {
-    if (selectedIdentifier) {
-      const filtered = timeFeatures.filter(item => item.identifier === selectedIdentifier);
-      const uniqueTimestamps = [...new Set(filtered.map(item => item.timestamp))];
-      setTimestamps(uniqueTimestamps);
-    }
-  }, [selectedIdentifier]);
+  const handleIdentifierChange = (e) => {
+    setSelectedIdentifier(e.target.value);
+    axios.post('http://localhost:5000/DataVisualization/get-timestamps', { identifier: e.target.value })
+      .then((response) => setTimestamps(response.data))
+      .catch((error) => console.error(error));
+  };
 
-  useEffect(() => {
-    if (selectedIdentifier && selectedTimestamp) {
-      const timeData = timeFeatures.find(item => 
-        item.identifier === selectedIdentifier && item.timestamp === selectedTimestamp
-      );
-      
-      const frequencyData = frequencyFeatures.find(item => 
-        item.identifier === selectedIdentifier && item.timestamp === selectedTimestamp
-      );
-
-      const timeFreqData = timeFrequencyFeatures.find(item => 
-        item.identifier === selectedIdentifier && item.timestamp === selectedTimestamp
-      );
-
-      setFilteredData({
-        time: timeData,
-        frequency: frequencyData,
-        timeFrequency: timeFreqData
-      });
-    }
-  }, [selectedIdentifier, selectedTimestamp]);
-
-  const handleSave = () => {
-    const blob = new Blob([JSON.stringify(filteredData)], { type: 'application/json' });
-    saveAs(blob, 'analysis_data.jsonl');
+  const handleTimestampChange = (e) => {
+    setSelectedTimestamp(e.target.value);
+    axios.post('http://localhost:5000/DataVisualization/get-data', {
+      identifier: selectedIdentifier,
+      timestamp: e.target.value,
+    })
+      .then((response) => setChartData(response.data))
+      .catch((error) => console.error(error));
   };
 
   return (
-    <div className="app-container">
-      <div className="sidebar">
-        <img src="cmore1.png" alt="C-MORE Logo" className="sidebar-logo" />
-        <h2>⚙️ C-MORE Data Processing</h2>
-        <p>Perform data analysis and anomaly detection on your time series data using our tools.</p>
-      </div>
+    <div style={{ padding: '20px' }}>
+      <h1>Data Analysis Dashboard</h1>
 
-      <div className="main-content">
-        <h1>⚙️ Data Analysis</h1>
-        
-        <div className="controls">
-          <select 
-            value={selectedIdentifier} 
-            onChange={(e) => setSelectedIdentifier(e.target.value)}
-          >
-            <option value="">Select Identifier</option>
-            {identifiers.map(id => (
-              <option key={id} value={id}>{id}</option>
-            ))}
-          </select>
+      {/* Identifier Dropdown */}
+      <label>
+        Select Identifier:
+        <select value={selectedIdentifier} onChange={handleIdentifierChange}>
+          <option value="">--Select--</option>
+          {identifiers.map((id) => <option key={id} value={id}>{id}</option>)}
+        </select>
+      </label>
 
-          <select
-            value={selectedTimestamp}
-            onChange={(e) => setSelectedTimestamp(e.target.value)}
-            disabled={!selectedIdentifier}
-          >
-            <option value="">Select Timestamp</option>
-            {timestamps.map(ts => (
-              <option key={ts} value={ts}>{ts}</option>
-            ))}
+      {/* Timestamp Dropdown */}
+      {timestamps.length > 0 && (
+        <label>
+          Select Timestamp:
+          <select value={selectedTimestamp} onChange={handleTimestampChange}>
+            <option value="">--Select--</option>
+            {timestamps.map((ts) => <option key={ts} value={ts}>{ts}</option>)}
           </select>
+        </label>
+      )}
+
+      {/* Charts */}
+      {chartData && (
+        <div>
+          {/* Chart for X-axis Time Series */}
+          <h2>X-axis Time Series</h2>
+          <Line
+            data={{
+              labels: chartData.tabl.x_axis_time_series,
+              datasets: [
+                {
+                  label: 'X-axis Data',
+                  data: chartData.tabl.x_axis_time_series,
+                  borderColor: 'blue',
+                  backgroundColor: 'rgba(0, 0, 255, 0.2)',
+                },
+              ],
+            }}
+          />
+
+          {/* Chart for Y-axis Time Series */}
+          <h2>Y-axis Time Series</h2>
+          <Line
+            data={{
+              labels: chartData.tabl2.y_axis_time_series,
+              datasets: [
+                {
+                  label: 'Y-axis Data',
+                  data: chartData.tabl2.y_axis_time_series,
+                  borderColor: 'green',
+                  backgroundColor: 'rgba(0, 255, 0, 0.2)',
+                },
+              ],
+            }}
+          />
+
+          {/* Chart for FFT Magnitude */}
+          <h2>FFT Magnitude (X-axis)</h2>
+          <Line
+            data={{
+              labels: chartData.tabl.x_axis_fft_frequency,
+              datasets: [
+                {
+                  label: 'FFT Magnitude',
+                  data: chartData.tabl.x_axis_fft_magnitude,
+                  borderColor: 'purple',
+                  backgroundColor: 'rgba(128, 0, 128, 0.2)',
+                },
+              ],
+            }}
+          />
+
+          {/* Chart for STFT Magnitude */}
+          <h2>STFT Magnitude (X-axis)</h2>
+          <Line
+            data={{
+              labels: chartData.tabl.x_axis_stft_frequency,
+              datasets: [
+                {
+                  label: 'STFT Magnitude',
+                  data: chartData.tabl.x_axis_stft_magnitude,
+                  borderColor: 'red',
+                  backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                },
+              ],
+            }}
+          />
         </div>
-
-        {filteredData.time && (
-          <>
-            <div className="tabs">
-              <button 
-                className={activeTab === 'x' ? 'active' : ''}
-                onClick={() => setActiveTab('x')}
-              >
-                Channel X
-              </button>
-              <button 
-                className={activeTab === 'y' ? 'active' : ''}
-                onClick={() => setActiveTab('y')}
-              >
-                Channel Y
-              </button>
-            </div>
-
-            {activeTab === 'x' ? (
-              <div className="tab-content">
-                <h2>X-axis Analysis</h2>
-                <div className="chart-container">
-                  <h3>Time Series</h3>
-                  <LineChart width={800} height={300} data={filteredData.time.channel_x}>
-                    <XAxis dataKey="time" />
-                    <YAxis />
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="value" stroke="#002366" />
-                  </LineChart>
-                </div>
-
-                <div className="chart-container">
-                  <h3>FFT Analysis</h3>
-                  <LineChart width={800} height={300} data={filteredData.frequency.channel_x_fft}>
-                    <XAxis dataKey="frequency" />
-                    <YAxis />
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="magnitude" stroke="#002366" />
-                  </LineChart>
-                </div>
-              </div>
-            ) : (
-              <div className="tab-content">
-                <h2>Y-axis Analysis</h2>
-                {/* Similar chart components for Y-axis */}
-              </div>
-            )}
-
-            <button className="save-button" onClick={handleSave}>
-              Save to JSON File
-            </button>
-          </>
-        )}
-      </div>
+      )}
     </div>
   );
 }
 
-export default App;
+export default PreviewVisualization;
