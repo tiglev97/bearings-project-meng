@@ -11,6 +11,11 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
+from io import BytesIO
+from PIL import Image
+import base64
+import json
+import datetime
 
 
 from pipelines.DataEntry import data_entry
@@ -30,7 +35,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
 
 DATASET_FOLDER_GOLD = 'outputs/Gold'
-DATASET_FOLDER_SILVER= 'outputs/Silver'
+DATASET_FOLDER_SILVER = 'outputs/Silver'
+DATASET_FOLDER_MODEL_ZOO = 'outputs/Model_Zoo'
 
 
 print('Loading...')
@@ -298,7 +304,6 @@ def get_dataset():
     datasets = [f for f in os.listdir(DATASET_FOLDER_GOLD) if f.endswith('.jsonl')]
     return jsonify(datasets)
 
-
 @app.route('/DataAlgorithmProcessing/run-algorithm', methods=['POST'])
 def run_algorithm():
     data = request.json
@@ -343,14 +348,50 @@ def run_algorithm():
 
     # Run clustering
     try:
-        result = run_clustering(df, algorithm, params)
+        result = run_clustering(df, algorithm, params, dataset)
         print("Clustering result:", result)  # Debugging
     except Exception as e:
         print("Error in clustering:", str(e))  # Debugging
         return jsonify({"error": f"Failed to run algorithm '{algorithm}': {str(e)}"}), 500
 
-    return jsonify(result)
+    try:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_file = os.path.join(DATASET_FOLDER_MODEL_ZOO, f"{algorithm}_{timestamp}.jsonl")
 
+        with open(output_file, 'w') as f:
+            json.dump(result, f)
+            f.write("\n")  # JSONL format
+
+        return jsonify({"message": "Algorithm executed successfully", "output_file": output_file, "result": result})
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to save results: {str(e)}"}), 500
+
+
+@app.route('/ModelZoo/get-files', methods=['GET'])
+def list_files():
+    try:
+        files = [f for f in os.listdir(DATASET_FOLDER_MODEL_ZOO) if f.endswith('.jsonl')]
+        print('Found the files:',files)
+        return jsonify(files)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/ModelZoo/get-files/<filename>', methods=['GET'])
+def get_file(filename):
+    print('Filename:',filename)
+    file_path = os.path.join(DATASET_FOLDER_MODEL_ZOO, filename)
+
+    if not os.path.exists(file_path):
+        return jsonify({"error": "File not found"}), 404
+
+    try:
+        with open(file_path, 'r') as f:
+            result = json.loads(f.readline())  # Read only the first JSONL entry
+            print(result)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True,host='localhost',port=5000)

@@ -1,5 +1,7 @@
 import FileUpload from '../components/FileUploader';
 import DataCleaner from '../components/DataCleaner';
+// import DataValidator from '../components/DataValidator';
+// import FeatureEngineering from '../components/FeatureEngineering';
 
 function ConvertTimeSeries() {
   return (

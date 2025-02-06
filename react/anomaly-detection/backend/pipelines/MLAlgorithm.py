@@ -3,8 +3,9 @@ from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
 import pandas as pd
+import datetime
 
-def run_clustering(cleaned_df, algorithm, params):
+def run_clustering(cleaned_df, algorithm, params,dataset):
     # Drop the first N columns (default: 12, configurable via params)
     cleaned_df = cleaned_df.drop(cleaned_df.columns[0:12], axis=1)
 
@@ -45,8 +46,11 @@ def run_clustering(cleaned_df, algorithm, params):
         score = -1  # Assign a default invalid score for single cluster
 
     return {
-        "labels": clusters.tolist(),
+        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "dataset": dataset,
+        "algorithm": algorithm,
         "silhouette_score": score,
-        "data": cleaned_df.tolist()
+        "parameters": params,
+        "labels": clusters.tolist()
 
     }
