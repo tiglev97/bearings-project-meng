@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Login from '../components/Login';
 
 
 function Main() {
@@ -28,6 +29,9 @@ function Main() {
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       minHeight: '100vh',}}>
+
+      {/* Login Button at the Top */}
+      <Login />
 
       {/* Title */}
       <h1 style={{ color: "#002366", fontSize: '60px', textAlign: "center", textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)' }}>
@@ -153,3 +157,4 @@ function Main() {
 }
 
 export default Main;
+

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
+
 function Sidebar({ onToggle }) {
   const [isOpen, setIsOpen] = useState(true);
 
@@ -147,6 +148,9 @@ function Sidebar({ onToggle }) {
       <div style={styles.imageContainer}>
         <img src="/logo.jpg" alt="Gears" style={styles.sidebarImage} />
       </div>
+
+      
+
     </div>
   );
 }
@@ -165,6 +169,7 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     borderRadius: "0px 10px 10px 0px",
+    zIndex: 500,
   },
   toggleButton: {
     backgroundColor: "#0066CC",

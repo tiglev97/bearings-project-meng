@@ -4,6 +4,7 @@ import axios from 'axios';
 import AlgorithmSelector from '../components/AlgorithmSelector';
 import DatasetSelector from '../components/DatasetSelector';
 import ResultsDisplay from '../components/ResultDisplay';
+import Login from '../components/Login';
 
 
 function DataProcessingAlgorithms() {
@@ -49,6 +50,9 @@ function DataProcessingAlgorithms() {
         minHeight: '100vh',
       }}
     >
+      {/* Login Button at the Top */}
+      <Login />  
+      
       <h1 style={{ fontSize: '60px', paddingTop: '50px' , textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}}>Data Processing Algorithms</h1>
   
       {/* Explanation Text Box */}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Login from '../components/Login';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -64,6 +65,9 @@ function PreviewVisualization() {
       backgroundPosition: 'center',
       minHeight: '100vh',
       }}>
+
+      {/* Login Button at the Top */}
+      <Login />  
       
       <h1 style={{fontSize: '60px', paddingTop: '50px', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}}>Data Analysis Dashboard</h1>
 

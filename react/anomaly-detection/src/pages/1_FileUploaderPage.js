@@ -1,5 +1,6 @@
 import FileUpload from '../components/FileUploader';
 import DataCleaner from '../components/DataCleaner';
+import Login from '../components/Login';
 
 function ConvertTimeSeries() {
   return (
@@ -10,6 +11,9 @@ function ConvertTimeSeries() {
       backgroundPosition: 'center',
       minHeight: '100vh', // Ensure the background covers the entire viewport height
     }}>
+
+      {/* Login Button at the Top */}
+      <Login />
 
       {/* Step 1: File Upload */}
       <div>

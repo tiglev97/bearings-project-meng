@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Login from '../components/Login';
 //import './App.css';
 
 function ModelZoo() {
@@ -59,6 +60,9 @@ function ModelZoo() {
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       minHeight: '100vh',}}>
+
+      {/* Login Button at the Top */}
+      <Login /> 
 
       <h1 style={{ fontSize: '60px', paddingTop: '10px' , textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}}>Model Zoo</h1>
       
