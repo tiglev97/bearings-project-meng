@@ -66,21 +66,31 @@ function ModelZoo() {
 
       <h1 style={{ fontSize: '60px', paddingTop: '10px' , textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}}>Model Zoo</h1>
       
-      <div className="file-selector">
-        <select
-          value={selectedFile || ''}
-          onChange={(e) => {
-            setSelectedFile(e.target.value);
-            loadFileData(e.target.value);
-          }}
-          disabled={loading}
-        >
-          <option value="" disabled>Select a file</option>
-          {availableFiles.map(file => (
-            <option key={file} value={file}>{file}</option>
-          ))}
-        </select>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem", marginBottom: "2rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <label style={{ fontSize: "20px", fontWeight: "bold" }}>Select Model File:</label>
+          <select 
+            value={selectedFile || ''}
+            onChange={(e) => {
+              setSelectedFile(e.target.value);
+              loadFileData(e.target.value);
+            }}
+            disabled={loading}
+            style={{
+              padding: "0.5rem", 
+              fontSize: "16px", 
+              borderRadius: "5px", 
+              border: "1px solid #ccc"
+            }}
+          >
+            <option value="" disabled>Select a file</option>
+            {availableFiles.map(file => (
+              <option key={file} value={file}>{file}</option>
+            ))}
+          </select>
+        </div>
       </div>
+
 
       {loading && <div className="loading">Loading...</div>}
       

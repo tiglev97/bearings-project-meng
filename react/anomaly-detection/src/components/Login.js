@@ -102,6 +102,7 @@ const styles = {
     alignItems: "center",
     zIndex: 1000,
   },
+
   page: {
     position: "relative",
     backgroundColor: "white",
@@ -111,17 +112,20 @@ const styles = {
     boxShadow: "0px 4px 10px rgba(0,0,0,0.3)",
     textAlign: "center",
   },
+
   title: {
     fontSize: "22px",
     marginBottom: "15px",
     color: "#002366",
   },
+
   label: {
     display: "block",
     textAlign: "left",
     marginBottom: "5px",
     fontWeight: "bold",
   },
+
   input: {
     width: "100%",
     padding: "10px",
@@ -129,6 +133,7 @@ const styles = {
     borderRadius: "5px",
     border: "1px solid #ccc",
   },
+
   submitButton: {
     width: "100%",
     backgroundColor: "#002366",
@@ -139,6 +144,8 @@ const styles = {
     cursor: "pointer",
     fontWeight: "bold",
   },
+
+
   closeX: {
     position: "absolute",
     top: "10px",
@@ -150,11 +157,13 @@ const styles = {
     cursor: "pointer",
     fontWeight: "bold",
   },
+
   toggleText: {
     marginTop: "10px",
     fontSize: "14px",
     color: "#333",
   },
+  
   toggleLink: {
     color: "#0066CC",
     cursor: "pointer",

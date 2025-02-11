@@ -63,15 +63,32 @@ function DataProcessingAlgorithms() {
         finishes processing, the results will be displayed below for further analysis. (text can be changed)
       </p>
   
-      {/* DatasetSelector */}
-      <div style={{ marginBottom: '20px', paddingTop: '15px' }}>
-        <DatasetSelector datasets={datasets} onSelect={setSelectedDataset} />
+      {/* Dataset Selector */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem", marginBottom: "2rem", paddingTop: '20px' }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <label style={{ fontSize: "20px", fontWeight: "bold" }}>Select Dataset:</label>
+          <select value={selectedDataset} onChange={(e) => setSelectedDataset(e.target.value)} 
+            style={{ padding: "0.5rem", fontSize: "16px", borderRadius: "5px", border: "1px solid #ccc" }}>
+            <option value="">--Select--</option>
+            {datasets.map((dataset) => <option key={dataset} value={dataset}>{dataset}</option>)}
+          </select>
+        </div>
       </div>
-  
-      {/* AlgorithmSelector */}
-      <div style={{ marginBottom: '20px' }}>
-        <AlgorithmSelector onSelect={setSelectedAlgorithm} onRun={handleRun} />
+
+      {/* Algorithm Selector */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem", marginBottom: "2rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <label style={{ fontSize: "20px", fontWeight: "bold" }}>Select Algorithm:</label>
+          <select value={selectedAlgorithm} onChange={(e) => setSelectedAlgorithm(e.target.value)} 
+            style={{ padding: "0.5rem", fontSize: "16px", borderRadius: "5px", border: "1px solid #ccc" }}>
+            <option value="">--Select--</option>
+            {/* Replace this with actual algorithm options if available */}
+            <option value="Algorithm1">Algorithm 1</option>
+            <option value="Algorithm2">Algorithm 2</option>
+          </select>
+        </div>
       </div>
+
   
       {results && <ResultsDisplay results={results} />}
     </div>

@@ -2,18 +2,16 @@ import React, { useState } from "react";
 import axios from "axios";
 
 const FileUpload = () => {
-  const [file, setFile] = useState(null); // Store the uploaded file
+  const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("Please select a file before uploading!");
-  const [checkedDf, setCheckedDf] = useState(null); // Store the checked_df data
+  const [checkedDf, setCheckedDf] = useState(null);
 
-  // Handle file input change
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
     setUploadStatus("Press the upload button to start uploading...");
-    setCheckedDf(null); // Clear previous table data
+    setCheckedDf(null);
   };
 
-  // Handle file upload
   const handleFileUpload = async () => {
     if (!file) {
       setUploadStatus("Please select a file before uploading!");
@@ -30,7 +28,7 @@ const FileUpload = () => {
 
       console.log("Upload Response:", response.data);
       setUploadStatus(`Success: ${response.data.message}`);
-      setCheckedDf(response.data.checkedDf); // Store the checked_df data
+      setCheckedDf(response.data.checkedDf);
     } catch (error) {
       console.error("Error uploading file:", error);
       setUploadStatus("Error uploading file.");
@@ -43,7 +41,9 @@ const FileUpload = () => {
 
       {/* File Input */}
       <input type="file" onChange={handleFileChange} style={styles.input} />
-      <button onClick={handleFileUpload} style={styles.button}>
+
+      {/* Upload Button (Jumps out on hover) */}
+      <button onClick={handleFileUpload} style={styles.button} className="jump-button">
         Upload
       </button>
 
@@ -78,6 +78,18 @@ const FileUpload = () => {
           </table>
         </div>
       )}
+
+      {/* CSS for Jump Effect */}
+      <style>
+        {`
+          .jump-button {
+            transition: transform 0.3s ease-in-out;
+          }
+          .jump-button:hover {
+            transform: scale(1.2);
+          }
+        `}
+      </style>
     </div>
   );
 };
@@ -87,16 +99,17 @@ const styles = {
   container: {
     display: "flex",
     flexDirection: "column",
-    justifyContent: "center", 
-    alignItems: "center", 
+    justifyContent: "center",
+    alignItems: "center",
     gap: "1rem",
-    margin: 'auto', 
+    margin: "auto",
     padding: "1rem",
     border: "1px solid #ddd",
     borderRadius: "5px",
-    maxWidth: "600px", 
+    maxWidth: "600px",
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-    height: "250px", 
+    backgroundColor: "#f9f9f9",
+    height: "250px",
   },
   input: {
     padding: "0.5rem",
@@ -108,6 +121,7 @@ const styles = {
     padding: "0.5rem 1rem",
     borderRadius: "5px",
     cursor: "pointer",
+    fontSize: "1rem",
   },
   status: {
     color: "#555",

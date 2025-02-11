@@ -6,10 +6,10 @@ function ConvertTimeSeries() {
   return (
     <div style={{
       textAlign: 'center',
-      backgroundImage: 'url(/gears.jpg)', // Directly reference the image in the public folder
+      backgroundImage: 'url(/gears.jpg)', 
       backgroundSize: 'cover',
       backgroundPosition: 'center',
-      minHeight: '100vh', // Ensure the background covers the entire viewport height
+      minHeight: '100vh', 
     }}>
 
       {/* Login Button at the Top */}
