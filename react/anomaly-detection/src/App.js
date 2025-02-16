@@ -6,6 +6,7 @@ import DataProcessingAlgorithms from './pages/3_DataProcessingAlgorithmnsPage';
 import ModelZoo from './pages/4_ModelZooPage';
 import Main from './pages/Main';
 import Testpage from './pages/test';
+import DataCleaning from './pages/5_DataCleaning';
 import Navigator from './components/Navigator'; // Assuming Sidebar is the correct name here
 import './index.css';
 
@@ -38,6 +39,7 @@ function App() {
             <Route path="/data_processing" element={<DataProcessingAlgorithms />} />
             <Route path="/model_zoo" element={<ModelZoo />} />
             <Route path="/test" element={<Testpage />} />
+            <Route path="/data_cleaning" element={<DataCleaning />} />
           </Routes>
         </div>
       </div>

@@ -88,6 +88,22 @@ function Sidebar({ onToggle }) {
                   e.currentTarget.querySelector("a").style.color = "white";
                 }}
               >
+                <Link to="/data_cleaning" style={styles.link}>
+                  Data Cleaning
+                </Link>
+              </li>
+              <li
+                style={styles.li}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "scale(1.1)";
+                  e.currentTarget.querySelector("a").style.color = "red";
+                  e.currentTarget.querySelector("a").style.fontWeight = "bold";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "scale(1)";
+                  e.currentTarget.querySelector("a").style.color = "white";
+                }}
+              >
                 <Link to="/charts" style={styles.link}>
                   Charts
                 </Link>
