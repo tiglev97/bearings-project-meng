@@ -26,19 +26,15 @@ function DataCleaning() {
           backgroundColor: 'rgba(255, 255, 255, 0.9)',
           padding: '30px',
           borderRadius: '10px',
-          maxWidth: '1000px',
+          maxWidth: '800px',
           width: '90%',
           boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
           margin: '30px auto',
         }}
       >
 
-        <div>
-          <FileUpload />
-        </div>
-
         <div >
-          <h1 >Clean Time Series Data</h1>
+          <h2 >Clean Time Series Data</h2>
           <DataCleaner />
 
         </div>

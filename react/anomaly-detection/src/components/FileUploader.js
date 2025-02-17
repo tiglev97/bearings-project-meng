@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const FileUpload = () => {
+const FileUpload = ({ onUploadSuccess }) => {
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("Please select a file before uploading!");
   const [checkedDf, setCheckedDf] = useState(null);
@@ -29,9 +29,12 @@ const FileUpload = () => {
       console.log("Upload Response:", response.data);
       setUploadStatus(`Success: ${response.data.message}`);
       setCheckedDf(response.data.checkedDf);
+      onUploadSuccess(true);
+
     } catch (error) {
       console.error("Error uploading file:", error);
-      setUploadStatus("Error uploading file.");
+      setUploadStatus("Error uploading file...");
+      onUploadSuccess(true);
     }
   };
 
@@ -94,7 +97,7 @@ const FileUpload = () => {
   );
 };
 
-// Styles for the component
+
 const styles = {
   container: {
     display: "flex",

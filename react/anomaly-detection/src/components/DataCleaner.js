@@ -70,6 +70,18 @@ const DataCleaner = () => {
       </form>
 
       {uploadStatus && <p style={styles.status}>{uploadStatus}</p>}
+
+      <style>
+        {`
+          .jump-button {
+            transition: transform 0.3s ease-in-out;
+          }
+          .jump-button:hover {
+            transform: scale(1.2);
+          }
+        `}
+      </style>
+      
     </div>
   );
 };
