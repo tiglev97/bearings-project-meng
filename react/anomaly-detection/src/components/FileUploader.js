@@ -5,11 +5,13 @@ const FileUpload = ({ onUploadSuccess }) => {
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("Please select a file before uploading!");
   const [checkedDf, setCheckedDf] = useState(null);
+  const [progress, setProgress] = useState(0);
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
     setUploadStatus("Press the upload button to start uploading...");
     setCheckedDf(null);
+    setProgress(0);
   };
 
   const handleFileUpload = async () => {
@@ -18,23 +20,35 @@ const FileUpload = ({ onUploadSuccess }) => {
       return;
     }
 
+    setUploadStatus("Please wait, uploading...");
     const formData = new FormData();
     formData.append("file", file);
 
     try {
       const response = await axios.post("http://127.0.0.1:5000/FileUpload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setProgress(percentCompleted);
+
+        },
+        
       });
 
       console.log("Upload Response:", response.data);
       setUploadStatus(`Success: ${response.data.message}`);
       setCheckedDf(response.data.checkedDf);
-      onUploadSuccess(true);
+      
+      if (response.data.checkedDf) {
+        onUploadSuccess(true);
+      }
+      console.log('Checkpoint4');
 
     } catch (error) {
       console.error("Error uploading file:", error);
       setUploadStatus("Error uploading file...");
-      onUploadSuccess(true);
+      onUploadSuccess(false);
+      setProgress(0);
     }
   };
 
@@ -49,6 +63,13 @@ const FileUpload = ({ onUploadSuccess }) => {
       <button onClick={handleFileUpload} style={styles.button} className="jump-button">
         Upload
       </button>
+
+      {/* Progress Bar */}
+      {progress > 0 && (
+        <div style={styles.progressBarContainer}>
+          <div style={{ ...styles.progressBar, width: `${progress}%` }}>{progress}%</div>
+        </div>
+      )}
 
       {/* Upload Status */}
       <p style={styles.status}>{uploadStatus}</p>
@@ -97,7 +118,6 @@ const FileUpload = ({ onUploadSuccess }) => {
   );
 };
 
-
 const styles = {
   container: {
     display: "flex",
@@ -112,7 +132,7 @@ const styles = {
     maxWidth: "600px",
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
     backgroundColor: "#f9f9f9",
-    height: "250px",
+    height: "300px",
   },
   input: {
     padding: "0.5rem",
@@ -129,6 +149,21 @@ const styles = {
   status: {
     color: "#555",
     fontSize: "1rem",
+  },
+  progressBarContainer: {
+    width: "100%",
+    backgroundColor: "#e0e0e0",
+    borderRadius: "5px",
+    overflow: "hidden",
+    marginTop: "1rem",
+  },
+  progressBar: {
+    height: "20px",
+    backgroundColor: "#007bff",
+    color: "white",
+    textAlign: "center",
+    lineHeight: "20px",
+    transition: "width 0.3s ease-in-out",
   },
   tableContainer: {
     marginTop: "2rem",
