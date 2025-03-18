@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const FileUpload = ({ onUploadSuccess }) => {  // ✅ Receive onUploadSuccess from props
+const FileUpload = ({ onUploadSuccess }) => {  
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState("Please select a file before uploading!");
   const [progress, setProgress] = useState(0);
@@ -60,14 +60,58 @@ const FileUpload = ({ onUploadSuccess }) => {  // ✅ Receive onUploadSuccess fr
   };
 
   return (
-    <div>
-      <h1>Upload File</h1>
+    <div style={styles.container}>
+      <h1 style={styles.h1}>Upload File</h1>
       <input type="file" onChange={handleFileChange} />
-      <button onClick={handleFileUpload}>Upload</button>
+      <button onClick={handleFileUpload} className="jump-button" style={styles.button}>
+        Upload
+      </button>
       <p>{uploadStatus}</p>
       {progress > 0 && <progress value={progress} max="100">{progress}%</progress>}
+
+      <style>
+        {`
+          .jump-button {
+            transition: transform 0.3s ease-in-out;
+          }
+          .jump-button:hover {
+            transform: scale(1.2);
+          }
+        `}
+      </style>
     </div>
   );
+};
+
+const styles = {
+  container: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "1rem",
+    margin: "auto",
+    padding: "1rem",
+    border: "1px solid #ddd",
+    borderRadius: "5px",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    backgroundColor: "#f9f9f9",
+    width: "60%",
+  },
+  h1: {
+    fontSize: "30px",
+    fontWeight: "bold",
+    marginBottom: "1rem",
+    textAlign: "center",
+  },
+  button: {
+    backgroundColor: "#007bff",
+    color: "#fff",
+    border: "none",
+    padding: "0.5rem 1rem",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontSize: "1rem",
+  },
 };
 
 export default FileUpload;
