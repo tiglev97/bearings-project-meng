@@ -34,6 +34,7 @@ UPLOAD_FOLDER= 'uploadFiles'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
 
+DATASET_FOLDER_BRONZE = 'outputs/Bronze'
 DATASET_FOLDER_GOLD = 'outputs/Gold'
 DATASET_FOLDER_SILVER = 'outputs/Silver'
 DATASET_FOLDER_MODEL_ZOO = 'outputs/Model_Zoo'
@@ -300,7 +301,9 @@ def getFeatureData():
     return jsonify(response)
 
 @app.route('/DataAlgorithmProcessing/get-datasets', methods=['GET'])
-def get_dataset():    
+def get_dataset():
+    datasets_bronze = [f for f in os.listdir(DATASET_FOLDER_BRONZE) if f.endswith('.jsonl')]    
+    datasets_silver = [f for f in os.listdir(DATASET_FOLDER_SILVER) if f.endswith('.jsonl')]
     datasets = [f for f in os.listdir(DATASET_FOLDER_GOLD) if f.endswith('.jsonl')]
     return jsonify(datasets)
 
