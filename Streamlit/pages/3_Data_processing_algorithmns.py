@@ -10,7 +10,7 @@ import base64
 import json
 import matplotlib.pyplot as plt
 import pandas as pd
-import scipy.stats as st
+import streamlit as st
 import numpy as np
 from io import BytesIO
 from PIL import Image

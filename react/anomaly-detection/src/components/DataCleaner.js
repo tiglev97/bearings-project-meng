@@ -5,72 +5,51 @@ const DataCleaner = () => {
   const [missingValueStrategy, setMissingValueStrategy] = useState("Drop Missing Values");
   const [scalingMethod, setScalingMethod] = useState("Standard Scaler");
   const [uploadStatus, setUploadStatus] = useState("");
-  const [timeFeatures, setTimeFeatures] = useState(null); // Time domain features
-  const [frequencyFeatures, setFrequencyFeatures] = useState(null); // Frequency domain features
-  const [timeFrequencyFeatures, setTimeFrequencyFeatures] = useState(null); // Time-frequency domain features
+  const [progress, setProgress] = useState(0);
+  const [timeFeatures, setTimeFeatures] = useState(null);
+  const [frequencyFeatures, setFrequencyFeatures] = useState(null);
+  const [timeFrequencyFeatures, setTimeFrequencyFeatures] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setUploadStatus("Processing... Please wait.");
+    setProgress(10); // Start progress
 
     try {
-      // Make POST request to Flask API
-      const response = await axios.post("http://127.0.0.1:5000/DataCleaning", {
-        missingValueStrategy,
-        scalingMethod,
-      });
+      const response = await axios.post(
+        "http://127.0.0.1:5000/DataCleaning",
+        { missingValueStrategy, scalingMethod },
+        {
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setProgress(percentCompleted);
+          },
+        }
+      );
 
       console.log("Server Response:", response.data);
       setUploadStatus(`Success: ${response.data.message}`);
-
-      // Store features in state
       setTimeFeatures(response.data.timeFeatures);
       setFrequencyFeatures(response.data.frequencyFeatures);
       setTimeFrequencyFeatures(response.data.timeFrequencyFeatures);
+      setProgress(100);
     } catch (error) {
       console.error("Error updating settings:", error);
       setUploadStatus("Error: Unable to update settings.");
+      setProgress(0);
     }
   };
 
-  // Reusable function to render a table
-  const renderTable = (data, title) => (
-    <div style={styles.tableContainer}>
-      <h3>{title}</h3>
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            {Object.keys(data[0]).map((key) => (
-              <th key={key} style={styles.tableHeader}>
-                {key}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, rowIndex) => (
-            <tr key={rowIndex}>
-              {Object.values(row).map((value, colIndex) => (
-                <td key={colIndex} style={styles.tableCell}>
-                  {value}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-
   return (
     <div className="data-cleaner" style={styles.container}>
-      <h2>Configure Data Cleaning Settings</h2>
+      <h2 style={styles.h2}>Configure Data Cleaning Settings</h2>
       <form onSubmit={handleSubmit}>
-        {/* Missing Value Strategy */}
-        <div className="form-group">
-          <label>Select Missing Value Strategy:</label>
+        <div className="form-group" style={styles.formGroup}>
+          <label style={styles.label}>Select Missing Value Strategy:</label>
           <select
             value={missingValueStrategy}
             onChange={(e) => setMissingValueStrategy(e.target.value)}
+            style={styles.select}
           >
             <option value="Drop Missing Values">Drop Missing Values</option>
             <option value="Mean Imputation">Mean Imputation</option>
@@ -78,12 +57,12 @@ const DataCleaner = () => {
           </select>
         </div>
 
-        {/* Scaling Method */}
-        <div className="form-group">
-          <label>Select Scaling Method:</label>
+        <div className="form-group" style={styles.formGroup}>
+          <label style={styles.label}>Select Scaling Method:</label>
           <select
             value={scalingMethod}
             onChange={(e) => setScalingMethod(e.target.value)}
+            style={styles.select}
           >
             <option value="Standard Scaler">Standard Scaler</option>
             <option value="Min-Max Scaler">Min-Max Scaler</option>
@@ -91,35 +70,66 @@ const DataCleaner = () => {
           </select>
         </div>
 
-        {/* Submit Button */}
-        <button type="submit" className="submit-btn" style={styles.button}>
+        <button type="submit" className="jump-button" style={styles.button}>
           Submit
         </button>
       </form>
 
-      {/* Upload Status */}
+      {progress > 0 && (
+        <div style={styles.progressBarContainer}>
+          <div style={{ ...styles.progressBar, width: `${progress}%` }}>{progress}%</div>
+        </div>
+      )}
+
       {uploadStatus && <p style={styles.status}>{uploadStatus}</p>}
 
-      {/* Render Feature Tables */}
-      {timeFeatures && renderTable(timeFeatures, "Time Domain Features")}
-      {frequencyFeatures && renderTable(frequencyFeatures, "Frequency Domain Features")}
-      {timeFrequencyFeatures && renderTable(timeFrequencyFeatures, "Time-Frequency Domain Features")}
+      <style>
+        {`
+          .jump-button {
+            transition: transform 0.3s ease-in-out;
+          }
+          .jump-button:hover {
+            transform: scale(1.2);
+          }
+        `}
+      </style>
     </div>
   );
 };
 
-// Styles
 const styles = {
   container: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     gap: "1rem",
-    margin: "2rem",
+    margin: "auto",
     padding: "1rem",
     border: "1px solid #ddd",
     borderRadius: "5px",
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    backgroundColor: "#f9f9f9",
+    width: "60%",
+  },
+  formGroup: {
+    display: "flex",
+    alignItems: "center",
+    gap: "1rem",
+    marginBottom: "2rem",
+  },
+  label: {
+    fontWeight: "bold",
+  },
+  select: {
+    padding: "0.5rem",
+    borderRadius: "5px",
+    border: "1px solid #ccc",
+  },
+  h2: {
+    fontSize: "30px",
+    fontWeight: "bold",
+    marginBottom: "1rem",
+    textAlign: "center",
   },
   button: {
     backgroundColor: "#007bff",
@@ -128,30 +138,26 @@ const styles = {
     padding: "0.5rem 1rem",
     borderRadius: "5px",
     cursor: "pointer",
+    fontSize: "1rem",
   },
   status: {
     color: "#555",
     fontSize: "1rem",
   },
-  tableContainer: {
+  progressBarContainer: {
+    width: "100%",
+    backgroundColor: "#e0e0e0",
+    borderRadius: "5px",
+    overflow: "hidden",
     marginTop: "1rem",
-    width: "100%",
-    overflowX: "auto",
   },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    textAlign: "left",
-  },
-  tableHeader: {
-    border: "1px solid #ddd",
-    padding: "0.5rem",
-    backgroundColor: "#f4f4f4",
-    fontWeight: "bold",
-  },
-  tableCell: {
-    border: "1px solid #ddd",
-    padding: "0.5rem",
+  progressBar: {
+    height: "20px",
+    backgroundColor: "#007bff",
+    color: "white",
+    textAlign: "center",
+    lineHeight: "20px",
+    transition: "width 0.3s ease-in-out",
   },
 };
 

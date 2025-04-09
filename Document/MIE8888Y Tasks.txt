@@ -69,3 +69,6 @@ Sept 25
   - Transformer - Timeseries
   - CNN - Timeseries
 3. Build a doc to record DL papers
+
+##Feb.6th/2025##
+1. Pytorch Lightning 

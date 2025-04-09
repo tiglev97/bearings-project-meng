@@ -14,10 +14,12 @@ from tslearn.preprocessing import TimeSeriesScalerMeanVariance
 from tslearn.clustering import TimeSeriesKMeans
 from scipy.spatial.distance import jensenshannon
 from scipy.stats import wasserstein_distance
-
+from sklearn.cluster import DBSCAN
+from tslearn.metrics import cdist_dtw
+from sklearn.mixture import GaussianMixture
 
 #Sample data to work with
-json_file = "D:\MENG-Project\bearings-project-meng\Streamlit\outputs\Silver\\cleaned_df.jsonl"
+json_file = "C:\\Users\\tigra\\OneDrive\\Documents\\cleaned_df.jsonl"
 
 #Function to fix the data timestamp
 def fix_timestamp_format(ts):
@@ -35,7 +37,7 @@ def fix_timestamp_format(ts):
 
 ########################## Clustering function ########################
 
-def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5):
+def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5, mode='KMeans'):
     '''
 
     Parameters
@@ -44,85 +46,214 @@ def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5):
         The JSON file which will contain the time series gear data
     truncation_factor : int
         Factor by which the data will be reduced to ensure code compiles
+    regularization: float
+        Factor to regularize the distance metrics
+    mode: str
+        'KMeans' , 'DBSCAN'
 
     Returns
     -------
     Distance metrics (jensen, wasserstein)
 
     '''
+    #KMeans mode
     
-    #Populate pandas dataframe containing the data
+    if mode == 'KMeans':
     
-    timestamps = []
-    channel_x = []
-    channel_y = []
+        #Populate pandas dataframe containing the data
+        
+        timestamps = []
+        channel_x = []
+        channel_y = []
+    
+        with open(json_file, 'r') as file:
+            for line in file:
+                try: 
+                    data = json.loads(line)
+                    timestamps.append(data['timestamp'])
+                    channel_x.append(data['channel_x'])
+                    channel_y.append(data['channel_y'])
+                #print(data)
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON: {e}")
+    
+        #Make a pandas df of the data
+        time_series_data = pd.DataFrame({
+            'timestamp': timestamps,
+            'channel_x': channel_x,
+            'channel_y': channel_y
+            })
+        
+        
+        #Truncate the data
+        time_series_data = time_series_data.iloc[::truncation_factor].reset_index(drop=True)
+        
+        
+        data_x = np.array(time_series_data['channel_x'].tolist())
+        data_y = np.array(time_series_data['channel_y'].tolist())
+        
+        # Initialize TimeSeriesKMeans with DTW metric for 4 clusters
+        model_x = TimeSeriesKMeans(n_clusters=4, metric="dtw", random_state=0)
+        model_y = TimeSeriesKMeans(n_clusters=4, metric="dtw", random_state=0)
+        
+        # Fit the model and predict clusters
+        clusters_x = model_x.fit_predict(data_x)
+        clusters_y = model_y.fit_predict(data_y)
+        
+        # Add clusters back to the DataFrame
+        time_series_data['cluster_x'] = clusters_x
+        time_series_data['cluster_y'] = clusters_y
+        
+        
+        #print(time_series_data)
+        
+        #Adjust timestamp
+        time_series_data['timestamp'] = time_series_data['timestamp'].apply(fix_timestamp_format)
+        
+    
+        plt.figure(figsize=(12, 6))
+    
+        # Plot x cluster over time as dots
+        plt.scatter(time_series_data['timestamp'], time_series_data['cluster_x'], label='X Cluster', color='blue', alpha=0.7)
+    
+        # Plot y cluster over time as dots
+        plt.scatter(time_series_data['timestamp'], time_series_data['cluster_y'], label='Y Cluster', color='red', alpha=0.7)
+    
+        # Labels and title
+        plt.xlabel("Timestamp")
+        plt.ylabel("Cluster")
+        plt.title("X and Y Clusters Over Time Series (DTW)")
+        plt.legend()
+    
+        # Show plot
+        plt.show()
+        
+        
+    
+    #DBSCAN Mode
+    if mode == 'DBSCAN':
+        
+        timestamps = []
+        channel_x = []
+        channel_y = []
 
-    with open(json_file, 'r') as file:
-        for line in file:
-            try: 
-                data = json.loads(line)
-                timestamps.append(data['timestamp'])
-                channel_x.append(data['channel_x'])
-                channel_y.append(data['channel_y'])
-            #print(data)
-            except json.JSONDecodeError as e:
-                print(f"Error decoding JSON: {e}")
+        with open(json_file, 'r') as file:
+            for line in file: 
+                try:
+                    data = json.loads(line)
+                    timestamps.append(data['timestamp'])
+                    channel_x.append(data['channel_x'])
+                    channel_y.append(data['channel_y'])
+                    #print(data)
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON: {e}")
 
-    #Make a pandas df of the data
-    time_series_data_dtw = pd.DataFrame({
-        'timestamp': timestamps,
-        'channel_x': channel_x,
-        'channel_y': channel_y
-        })
-    
-    
-    #Truncate the data
-    time_series_data_dtw = time_series_data_dtw.iloc[::truncation_factor].reset_index(drop=True)
-    
-    
-    data_x = np.array(time_series_data_dtw['channel_x'].tolist())
-    data_y = np.array(time_series_data_dtw['channel_y'].tolist())
-    
-    # Initialize TimeSeriesKMeans with DTW metric for 4 clusters
-    model_x = TimeSeriesKMeans(n_clusters=4, metric="dtw", random_state=0)
-    model_y = TimeSeriesKMeans(n_clusters=4, metric="dtw", random_state=0)
-    
-    # Fit the model and predict clusters
-    clusters_x = model_x.fit_predict(data_x)
-    clusters_y = model_y.fit_predict(data_y)
-    
-    # Add clusters back to the DataFrame
-    time_series_data_dtw['cluster_x'] = clusters_x
-    time_series_data_dtw['cluster_y'] = clusters_y
-    
-    
-    print(time_series_data_dtw)
-    
-    #Adjust timestamp
-    time_series_data_dtw['timestamp'] = time_series_data_dtw['timestamp'].apply(fix_timestamp_format)
-    
 
-    plt.figure(figsize=(12, 6))
+        time_series_data = pd.DataFrame({
+            'timestamp': timestamps,
+            'channel_x': channel_x,
+            'channel_y': channel_y})
+        
+        #No truncation with DBSCAN as PCA is used
+        
+        data_x = np.array(time_series_data['channel_x'].tolist())
+        data_y = np.array(time_series_data['channel_y'].tolist())
+        
+        pca = PCA(n_components=8)
+        features_x = pca.fit_transform(data_x)
+        features_y = pca.fit_transform(data_y)
 
-    # Plot x cluster over time as dots
-    plt.scatter(time_series_data_dtw['timestamp'], time_series_data_dtw['cluster_x'], label='X Cluster', color='blue', alpha=0.7)
+        dbscan_x = DBSCAN(eps=0.8, min_samples=5).fit(features_x)
+        dbscan_y = DBSCAN(eps=0.8, min_samples=5).fit(features_y)
+        
+        time_series_data['cluster_x'] = dbscan_x.labels_
+        time_series_data['cluster_y'] = dbscan_y.labels_
+        
+        #Adjust timestamp
+        time_series_data['timestamp'] = time_series_data['timestamp'].apply(fix_timestamp_format)
+        
+        time_series_data['timestamp'] = pd.to_datetime(time_series_data['timestamp'])
 
-    # Plot y cluster over time as dots
-    plt.scatter(time_series_data_dtw['timestamp'], time_series_data_dtw['cluster_y'], label='Y Cluster', color='red', alpha=0.7)
+        plt.figure(figsize=(12, 6))
 
-    # Labels and title
-    plt.xlabel("Timestamp")
-    plt.ylabel("Cluster")
-    plt.title("X and Y Clusters Over Time Series (DTW)")
-    plt.legend()
+        # Plot x cluster over time as dots
+        plt.scatter(time_series_data['timestamp'], time_series_data['cluster_x'], label='X Cluster', color='blue', alpha=0.7)
 
-    # Show plot
-    plt.show()
-    
+        # Plot y cluster over time as dots
+        plt.scatter(time_series_data['timestamp'], time_series_data['cluster_y'], label='Y Cluster', color='red', alpha=0.7)
+
+        # Labels and title
+        plt.xlabel("Timestamp")
+        plt.ylabel("Cluster")
+        plt.title("X and Y Clusters Over Time Series (DBSCAN Clustering)")
+        plt.legend()
+
+        # Show plot
+        plt.show()
+        
+    if mode == 'GMM':
+        timestamps = []
+        channel_x = []
+        channel_y = []
+
+        with open(json_file, 'r') as file:
+            for line in file: 
+                try:
+                    data = json.loads(line)
+                    timestamps.append(data['timestamp'])
+                    channel_x.append(data['channel_x'])
+                    channel_y.append(data['channel_y'])
+                    #print(data)
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON: {e}")
+
+
+        time_series_data = pd.DataFrame({
+            'timestamp': timestamps,
+            'channel_x': channel_x,
+            'channel_y': channel_y})
+        
+        n_clusters = 4
+        data_x = np.array(time_series_data['channel_x'].tolist())
+        data_y = np.array(time_series_data['channel_y'].tolist())
+        
+        gmm_x = GaussianMixture(n_components=n_clusters, random_state=0)
+        gmm_y = GaussianMixture(n_components=n_clusters, random_state=0)
+        
+        clusters_x = gmm_x.fit_predict(data_x)
+        clusters_y = gmm_y.fit_predict(data_y)
+        
+        time_series_data['cluster_x'] = clusters_x
+        time_series_data['cluster_y'] = clusters_y
+        
+        
+        #Adjust timestamp
+        time_series_data['timestamp'] = time_series_data['timestamp'].apply(fix_timestamp_format)
+        
+        time_series_data['timestamp'] = pd.to_datetime(time_series_data['timestamp'])
+
+        plt.figure(figsize=(12, 6))
+
+        # Plot x cluster over time as dots
+        plt.scatter(time_series_data['timestamp'], time_series_data['cluster_x'], label='X Cluster', color='blue', alpha=0.7)
+
+        # Plot y cluster over time as dots
+        plt.scatter(time_series_data['timestamp'], time_series_data['cluster_y'], label='Y Cluster', color='red', alpha=0.7)
+
+        # Labels and title
+        plt.xlabel("Timestamp")
+        plt.ylabel("Cluster")
+        plt.title("X and Y Clusters Over Time Series (GMM)")
+        plt.legend()
+
+        # Show plot
+        plt.show()
+        
+        
     #Implement Jensen Metrics
     lambda_penalty = regularization
 
-    clusters = time_series_data_dtw.groupby('cluster_x')
+    clusters = time_series_data.groupby('cluster_x')
     
     #Represent each cluster as a probability distribution
     cluster_distributions = {}
@@ -155,7 +286,8 @@ def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5):
 
     # Calculate the regularized metric
     regularized_metric_x_cluster = jsd_sum_x_cluster - lambda_penalty * jsd_variance_x_cluster
-
+    
+    print("X Cluster")
     print(f"Sum of JSD values: {jsd_sum_x_cluster}")
     print(f"Variance of JSD values: {jsd_variance_x_cluster}")
     print(f"Regularized Clustering Metric: {regularized_metric_x_cluster}")
@@ -184,10 +316,11 @@ def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5):
     print(f"Sum of Wasserstein distances: {wasserstein_sum_x_cluster}")
     print(f"Variance of Wasserstein distances: {wasserstein_variance_x_cluster}")
     print(f"Regularized Clustering Metric (Wasserstein) for x_cluster: {regularized_metric_wasserstein_x_cluster}")
+    print()
     
     #Repeat the whole thing with y channel
 
-    clusters = time_series_data_dtw.groupby('cluster_y')
+    clusters = time_series_data.groupby('cluster_y')
     
     #Represent each cluster as a probability distribution
     cluster_distributions = {}
@@ -219,6 +352,7 @@ def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5):
     # Calculate the regularized metric
     regularized_metric_y_cluster = jsd_sum_y_cluster - lambda_penalty * jsd_variance_y_cluster
     
+    print("Y Cluster")
     print(f"Sum of JSD values: {jsd_sum_y_cluster}")
     print(f"Variance of JSD values: {jsd_variance_y_cluster}")
     print(f"Regularized Clustering Metric: {regularized_metric_y_cluster}")
@@ -248,9 +382,8 @@ def cluster_gear_json(json_file, truncation_factor=20, regularization=0.5):
     print(f"Regularized Clustering Metric (Wasserstein) for y_cluster: {regularized_metric_wasserstein_y_cluster}")
     
     return regularized_metric_x_cluster, regularized_metric_y_cluster, regularized_metric_wasserstein_x_cluster, regularized_metric_wasserstein_y_cluster
+        
 
 
-
-
-#cluster_gear_json(json_file, truncation_factor=60, regularization=0.5)
+cluster_gear_json(json_file=json_file, truncation_factor=80, regularization=0.5, mode='GMM')
     

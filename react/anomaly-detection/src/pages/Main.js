@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Login from '../components/Login';
 
 
 function Main() {
@@ -21,9 +22,19 @@ function Main() {
 
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ 
+      padding: "20px",
+      textAlign: 'center',
+      backgroundImage: 'url(/gears.jpg)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      minHeight: '100vh',}}>
+
+      {/* Login Button at the Top */}
+      <Login />
+
       {/* Title */}
-      <h1 style={{ color: "#002366", textAlign: "center" }}>
+      <h1 style={{ color: "#002366", fontSize: '60px', textAlign: "center", textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)' }}>
         ⚙️ C-more Anomaly Detection
       </h1>
 
@@ -68,20 +79,20 @@ function Main() {
       
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         {/* Key Features */}
-        <div style={{ width: "48%" }}>
+        <div style={{ width: "48%", color: "#333", }}>
           <details>
             <summary
               style={{
                 fontSize: "18px",
                 fontWeight: "bold",
                 cursor: "pointer",
-                color: "#002366",
+                
               }}
             >
               Key Features
             </summary>
             <ul
-              style={{ fontSize: "16px", lineHeight: "1.8", marginTop: "10px" }}
+              style={{ fontSize: "16px", lineHeight: "1.8", marginTop: "10px", backgroundColor: "#f9f9f9", borderRadius: "10px",}}
             >
               <li>
                 <strong>Data Upload & Preprocessing:</strong> Upload data in
@@ -127,6 +138,9 @@ function Main() {
                 fontSize: "16px",
                 lineHeight: "1.6",
                 marginTop: "10px",
+                backgroundColor: "#f9f9f9",
+                borderRadius: "10px",
+                padding: '10px',
               }}
             >
               The platform is designed for data scientists, analysts, and
@@ -143,3 +157,4 @@ function Main() {
 }
 
 export default Main;
+

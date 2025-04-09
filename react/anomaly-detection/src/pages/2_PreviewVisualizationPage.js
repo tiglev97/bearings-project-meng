@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Login from '../components/Login';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -55,28 +56,43 @@ function PreviewVisualization() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Data Analysis Dashboard</h1>
+  
+    
+    <div style={{ 
+      textAlign: 'center',
+      backgroundImage: 'url(/gears.jpg)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      minHeight: '100vh',
+      }}>
+
+      {/* Login Button at the Top */}
+      <Login />  
+      
+      <h1 style={{fontSize: '60px', paddingTop: '50px', textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}}>Data Analysis Dashboard</h1>
 
       {/* Identifier Dropdown */}
-      <label>
-        Select Identifier:
-        <select value={selectedIdentifier} onChange={handleIdentifierChange}>
-          <option value="">--Select--</option>
-          {identifiers.map((id) => <option key={id} value={id}>{id}</option>)}
-        </select>
-      </label>
-
-      {/* Timestamp Dropdown */}
-      {timestamps.length > 0 && (
-        <label>
-          Select Timestamp:
-          <select value={selectedTimestamp} onChange={handleTimestampChange}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem", marginBottom: "2rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <label style={{ fontSize: "20px", fontWeight: "bold" }}>Select Identifier:</label>
+          <select value={selectedIdentifier} onChange={handleIdentifierChange} style={{ padding: "0.5rem", fontSize: "16px", borderRadius: "5px", border: "1px solid #ccc" }}>
             <option value="">--Select--</option>
-            {timestamps.map((ts) => <option key={ts} value={ts}>{ts}</option>)}
+            {identifiers.map((id) => <option key={id} value={id}>{id}</option>)}
           </select>
-        </label>
-      )}
+        </div>
+
+        {/* Timestamp Dropdown */}
+        {timestamps.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <label style={{ fontSize: "20px", fontWeight: "bold" }}>Select Timestamp:</label>
+            <select value={selectedTimestamp} onChange={handleTimestampChange} style={{ padding: "0.5rem", fontSize: "16px", borderRadius: "5px", border: "1px solid #ccc" }}>
+              <option value="">--Select--</option>
+              {timestamps.map((ts) => <option key={ts} value={ts}>{ts}</option>)}
+            </select>
+          </div>
+        )}
+      </div>
+
 
       {/* Charts */}
       {chartData && (
