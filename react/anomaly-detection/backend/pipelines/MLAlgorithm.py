@@ -5,7 +5,7 @@ from sklearn.metrics import silhouette_score
 import pandas as pd
 import datetime
 
-def run_clustering(cleaned_df, algorithm, params,dataset):
+def run_clustering(cleaned_df, algorithm, params, dataset):
     # Drop the first N columns (default: 12, configurable via params)
     cleaned_df = cleaned_df.drop(cleaned_df.columns[0:12], axis=1)
 

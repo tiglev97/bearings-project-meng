@@ -9,7 +9,7 @@ import tempfile
 import pandas as pd
 import numpy as np
 import time
-import matplotlib.pyplot as plt
+
 from sklearn.preprocessing import StandardScaler
 from io import BytesIO
 from PIL import Image
@@ -99,6 +99,11 @@ def run_data_cleaning(checked_df, missing_value_strategy, scaling_method):
 def extract_features_from_cleaned_data(cleaned_df):
     time_domain_features,frequency_domain_features,time_frequency_domain_features = extract_features(cleaned_df)
     return time_domain_features,frequency_domain_features,time_frequency_domain_features
+
+def convert_ndarrays_to_lists(df):
+    for col in df.columns:
+        df[col] = df[col].apply(lambda x: x.tolist() if isinstance(x, np.ndarray) else x)
+    return df
 
 
 @app.route('/')
@@ -202,15 +207,15 @@ def dataCleaning():
             data_frame_to_jsonl(cleaned_df, "cleaned_df", "Silver")
 
             # Extract features
+            global time_features, frequency_features, time_frequency_features
             time_features, frequency_features, time_frequency_features = extract_features_from_cleaned_data(cleaned_df)
+
             data_frame_to_jsonl(time_features, "time_domain_features", "Gold")
             data_frame_to_jsonl(frequency_features, "frequency_domain_features", "Gold")
             data_frame_to_jsonl(time_frequency_features, "time_frequency_domain_features", "Gold")
-
-            # Convert all features to JSON for response
-            time_features_json = time_features.to_dict(orient='records')
-            frequency_features_json = frequency_features.to_dict(orient='records')
-            time_frequency_features_json = time_frequency_features.to_dict(orient='records')
+            time_features_json = convert_ndarrays_to_lists(time_features.copy()).to_dict(orient='records')
+            frequency_features_json = convert_ndarrays_to_lists(frequency_features.copy()).to_dict(orient='records')
+            time_frequency_features_json = convert_ndarrays_to_lists(time_frequency_features.copy()).to_dict(orient='records')
 
             # Include all processed data in the response
             response = {
@@ -232,6 +237,7 @@ def dataCleaning():
 @app.route('/DataVisualization/get-identifiers', methods=['GET'])
 def getIdentifiers():
     identifiers = time_features['identifier'].unique().tolist()
+    print(type(time_features))
     return jsonify(identifiers)
 
 @app.route('/DataVisualization/get-timestamps', methods=['POST'])
@@ -242,6 +248,7 @@ def getTimeStamps():
 
 @app.route('/DataVisualization/get-data', methods=['POST'])
 def getFeatureData():
+
     identifier = request.json.get('identifier')
     timestamp = request.json.get('timestamp')
 
@@ -255,6 +262,8 @@ def getFeatureData():
     if time_features_filtered_df.empty or frequency_features_filtered_df.empty or time_frequency_features_filtered_df.empty:
         return jsonify({'error': 'No data found for the selected identifier and timestamp.'}), 404
 
+
+    print(1)
 
     x_axis_time_series = time_features_filtered_df.iloc[0]['channel_x']
     y_axis_time_series = time_features_filtered_df.iloc[0]['channel_y']
@@ -271,41 +280,42 @@ def getFeatureData():
     y_axis_stft_frequency = time_frequency_features_filtered_df.iloc[0]['channel_y_stft_frequency']
     y_axis_stft_time= time_frequency_features_filtered_df.iloc[0]['channel_y_stft_time']
 
+    print(2)
+
     # Prepare the response
     response = {
         'tabl': {
-            'x_axis_time_series': list(x_axis_time_series) if hasattr(x_axis_time_series, '__iter__') else x_axis_time_series,
-            'time_features': time_features_filtered_df.to_dict(orient='records'),
+            'x_axis_time_series': list(x_axis_time_series),
+            'time_features': json.loads(time_features_filtered_df.to_json(orient='records')),
             'x_axis_fft_magnitude': list(x_axis_fft_magnitude),
             'x_axis_fft_frequency': list(x_axis_fft_frequency),
-            'frequency_features': frequency_features_filtered_df.to_dict(orient='records'),
+            'frequency_features': json.loads(frequency_features_filtered_df.to_json(orient='records')),
             'x_axis_stft_magnitude': list(x_axis_stft_magnitude),
             'x_axis_stft_frequency': list(x_axis_stft_frequency),
             'x_axis_stft_time': list(x_axis_stft_time),
-            'time_frequency_features': time_frequency_features_filtered_df.to_dict(orient='records'),
+            'time_frequency_features': json.loads(time_frequency_features_filtered_df.to_json(orient='records')),
         },
         'tabl2': {
-            'y_axis_time_series': list(y_axis_time_series) if hasattr(y_axis_time_series, '__iter__') else y_axis_time_series,
-            'time_features': time_features_filtered_df.to_dict(orient='records'),
+            'y_axis_time_series': list(y_axis_time_series),
+            'time_features': json.loads(time_features_filtered_df.to_json(orient='records')),
             'y_axis_fft_magnitude': list(y_axis_fft_magnitude),
             'y_axis_fft_frequency': list(y_axis_fft_frequency),
-            'frequency_features': frequency_features_filtered_df.to_dict(orient='records'),
+            'frequency_features': json.loads(frequency_features_filtered_df.to_json(orient='records')),
             'y_axis_stft_magnitude': list(y_axis_stft_magnitude),
             'y_axis_stft_frequency': list(y_axis_stft_frequency),
             'y_axis_stft_time': list(y_axis_stft_time),
-            'time_frequency_features': time_frequency_features_filtered_df.to_dict(orient='records'),
+            'time_frequency_features': json.loads(time_frequency_features_filtered_df.to_json(orient='records')),
         }
     }
-    
-
+    print(3)
     return jsonify(response)
 
 @app.route('/DataAlgorithmProcessing/get-datasets', methods=['GET'])
 def get_dataset():
     datasets_bronze = [f for f in os.listdir(DATASET_FOLDER_BRONZE) if f.endswith('.jsonl')]    
     datasets_silver = [f for f in os.listdir(DATASET_FOLDER_SILVER) if f.endswith('.jsonl')]
-    datasets = [f for f in os.listdir(DATASET_FOLDER_GOLD) if f.endswith('.jsonl')]
-    return jsonify(datasets)
+    datasets_gold = [f for f in os.listdir(DATASET_FOLDER_GOLD) if f.endswith('.jsonl')]
+    return jsonify(datasets_gold)
 
 @app.route('/DataAlgorithmProcessing/run-algorithm', methods=['POST'])
 def run_algorithm():

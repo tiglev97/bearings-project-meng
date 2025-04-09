@@ -22,7 +22,7 @@ def jsonl_to_dataframe(file_path):
                 record.update(time_series_data)
             data.append(record)
     df = pd.DataFrame(data)
-    
+    print(type(df))
     logging.info("Available columns in DataFrame: %s", df.columns)
     return df
 
