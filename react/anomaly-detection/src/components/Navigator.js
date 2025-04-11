@@ -197,7 +197,6 @@ const styles = {
     fontSize: "14px",
     transition: "0.3s ease",
     textAlign: "center",
-    borderRadius: "5px",
   },
   title: {
     textAlign: "center",

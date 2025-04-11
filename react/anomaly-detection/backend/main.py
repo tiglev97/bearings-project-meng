@@ -4,6 +4,17 @@ import os
 import io
 import zipfile
 import pandas as pd
+import numpy as np
+import time
+import requests
+from sklearn.preprocessing import StandardScaler
+from io import BytesIO
+from PIL import Image
+import base64
+import json
+import datetime
+
+
 from pipelines.DataEntry import data_entry
 from pipelines.BronzeDataEntry import get_bronze_data_path
 from pipelines.JsonlConverter import jsonl_to_dataframe, data_frame_to_jsonl
@@ -18,8 +29,10 @@ UPLOAD_FOLDER = 'uploadFiles'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+DATASET_FOLDER_BRONZE = 'outputs/Bronze'
 DATASET_FOLDER_GOLD = 'outputs/Gold'
 DATASET_FOLDER_SILVER = 'outputs/Silver'
+DATASET_FOLDER_MODEL_ZOO = 'outputs/Model_Zoo'
 
 print("🚀 Server is starting...")
 
@@ -61,6 +74,85 @@ def run_data_checks(json_file_paths):
     
     except Exception as e:
         print(f"⚠️ Error during data checks: {e}")
+
+def convert_ndarrays_to_lists(df):
+    for col in df.columns:
+        df[col] = df[col].apply(lambda x: x.tolist() if isinstance(x, np.ndarray) else x)
+    return df
+
+
+@app.route('/test', methods=['GET'])
+def get_test():
+    return jsonify({"test": "Backend Online"})
+
+
+
+@app.route('/PipelineExecution', methods=['POST'])
+def execute_pipeline():
+    try:
+        data = request.get_json()
+        algorithm = data.get('algorithm')
+        params = data.get('params', {})
+        missing_value_strategy = data.get('missingValueStrategy')
+        scaling_method = data.get('scalingMethod')
+
+        if not all([algorithm, missing_value_strategy, scaling_method]):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Step 1: Call /DataCleaning API (uses checked_df.jsonl from Silver)
+        cleaning_payload = {
+            "missingValueStrategy": missing_value_strategy,
+            "scalingMethod": scaling_method
+        }
+        cleaning_response = requests.post("http://localhost:5000/DataCleaning", json=cleaning_payload)
+        if cleaning_response.status_code != 200:
+            return jsonify({"error": "❌ Data cleaning failed", "details": cleaning_response.json()}), 500
+
+        # Step 2: List all .jsonl files in Gold folder
+        gold_files = [f for f in os.listdir(DATASET_FOLDER_GOLD) if f.endswith('.jsonl')]
+        results = []
+
+        # Step 3: For each Gold file, run clustering
+        for gold_file in gold_files:
+            print(f"🔍 Running algorithm on: {gold_file}")
+            algorithm_payload = {
+                "dataset": gold_file,
+                "algorithm": algorithm,
+                "params": params
+            }
+
+            clustering_response = requests.post("http://localhost:5000/DataAlgorithmProcessing/run-algorithm", json=algorithm_payload)
+
+            if clustering_response.status_code == 200:
+                clustering_data = clustering_response.json()
+
+                result_obj = clustering_data.get("result", {})
+                result_obj.update({
+                    "dataset": gold_file,
+                    "output_file": clustering_data.get("output_file")
+                })
+
+                results.append({
+                    "result": result_obj
+                })
+            else:
+                results.append({
+                    "dataset": gold_file,
+                    "error": clustering_response.json()
+                })
+                
+        return jsonify({
+            "message": f"✅ Full pipeline executed on {len(gold_files)} datasets",
+            "results": results
+        })
+
+    except Exception as e:
+        print("❌ Error executing pipeline:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+
+
 
 
 @app.route('/FileUpload', methods=['POST'])
@@ -113,6 +205,16 @@ def dataCleaning():
         print(f"✅ Skipping Data Cleaning: {cleaned_df_path} already exists.")
         return jsonify({"message": "✅ Data cleaning already performed.", "status": "skipped"}), 200
 
+            # # Extract features
+            # global time_features, frequency_features, time_frequency_features
+            # time_features, frequency_features, time_frequency_features = extract_features_from_cleaned_data(cleaned_df)
+
+            # data_frame_to_jsonl(time_features, "time_domain_features", "Gold")
+            # data_frame_to_jsonl(frequency_features, "frequency_domain_features", "Gold")
+            # data_frame_to_jsonl(time_frequency_features, "time_frequency_domain_features", "Gold")
+            # time_features_json = convert_ndarrays_to_lists(time_features.copy()).to_dict(orient='records')
+            # frequency_features_json = convert_ndarrays_to_lists(frequency_features.copy()).to_dict(orient='records')
+            # time_frequency_features_json = convert_ndarrays_to_lists(time_frequency_features.copy()).to_dict(orient='records')
     try:
         checked_df_path = os.path.join("outputs", "Silver", "checked_df.jsonl")
         if not os.path.exists(checked_df_path):
@@ -124,6 +226,7 @@ def dataCleaning():
 
         time_features_path = os.path.join("outputs", "Gold", "time_domain_features.jsonl")
         if not os.path.exists(time_features_path):
+            global time_features, frequency_features, time_frequency_features
             time_features, frequency_features, time_frequency_features = extract_features(cleaned_df)
             data_frame_to_jsonl(time_features, "time_domain_features", "Gold")
             data_frame_to_jsonl(frequency_features, "frequency_domain_features", "Gold")
@@ -144,6 +247,7 @@ def dataCleaning():
 @app.route('/DataVisualization/get-identifiers', methods=['GET'])
 def getIdentifiers():
     identifiers = time_features['identifier'].unique().tolist()
+    print(type(time_features))
     return jsonify(identifiers)
 
 @app.route('/DataVisualization/get-timestamps', methods=['POST'])
@@ -154,6 +258,7 @@ def getTimeStamps():
 
 @app.route('/DataVisualization/get-data', methods=['POST'])
 def getFeatureData():
+
     identifier = request.json.get('identifier')
     timestamp = request.json.get('timestamp')
 
@@ -167,6 +272,8 @@ def getFeatureData():
     if time_features_filtered_df.empty or frequency_features_filtered_df.empty or time_frequency_features_filtered_df.empty:
         return jsonify({'error': 'No data found for the selected identifier and timestamp.'}), 404
 
+
+    print(1)
 
     x_axis_time_series = time_features_filtered_df.iloc[0]['channel_x']
     y_axis_time_series = time_features_filtered_df.iloc[0]['channel_y']
@@ -183,40 +290,42 @@ def getFeatureData():
     y_axis_stft_frequency = time_frequency_features_filtered_df.iloc[0]['channel_y_stft_frequency']
     y_axis_stft_time= time_frequency_features_filtered_df.iloc[0]['channel_y_stft_time']
 
+    print(2)
+
     # Prepare the response
     response = {
         'tabl': {
-            'x_axis_time_series': list(x_axis_time_series) if hasattr(x_axis_time_series, '__iter__') else x_axis_time_series,
-            'time_features': time_features_filtered_df.to_dict(orient='records'),
+            'x_axis_time_series': list(x_axis_time_series),
+            'time_features': json.loads(time_features_filtered_df.to_json(orient='records')),
             'x_axis_fft_magnitude': list(x_axis_fft_magnitude),
             'x_axis_fft_frequency': list(x_axis_fft_frequency),
-            'frequency_features': frequency_features_filtered_df.to_dict(orient='records'),
+            'frequency_features': json.loads(frequency_features_filtered_df.to_json(orient='records')),
             'x_axis_stft_magnitude': list(x_axis_stft_magnitude),
             'x_axis_stft_frequency': list(x_axis_stft_frequency),
             'x_axis_stft_time': list(x_axis_stft_time),
-            'time_frequency_features': time_frequency_features_filtered_df.to_dict(orient='records'),
+            'time_frequency_features': json.loads(time_frequency_features_filtered_df.to_json(orient='records')),
         },
         'tabl2': {
-            'y_axis_time_series': list(y_axis_time_series) if hasattr(y_axis_time_series, '__iter__') else y_axis_time_series,
-            'time_features': time_features_filtered_df.to_dict(orient='records'),
+            'y_axis_time_series': list(y_axis_time_series),
+            'time_features': json.loads(time_features_filtered_df.to_json(orient='records')),
             'y_axis_fft_magnitude': list(y_axis_fft_magnitude),
             'y_axis_fft_frequency': list(y_axis_fft_frequency),
-            'frequency_features': frequency_features_filtered_df.to_dict(orient='records'),
+            'frequency_features': json.loads(frequency_features_filtered_df.to_json(orient='records')),
             'y_axis_stft_magnitude': list(y_axis_stft_magnitude),
             'y_axis_stft_frequency': list(y_axis_stft_frequency),
             'y_axis_stft_time': list(y_axis_stft_time),
-            'time_frequency_features': time_frequency_features_filtered_df.to_dict(orient='records'),
+            'time_frequency_features': json.loads(time_frequency_features_filtered_df.to_json(orient='records')),
         }
     }
-    
-
+    print(3)
     return jsonify(response)
 
 @app.route('/DataAlgorithmProcessing/get-datasets', methods=['GET'])
-def get_dataset():    
-    datasets = [f for f in os.listdir(DATASET_FOLDER_GOLD) if f.endswith('.jsonl')]
-    return jsonify(datasets)
-
+def get_dataset():
+    datasets_bronze = [f for f in os.listdir(DATASET_FOLDER_BRONZE) if f.endswith('.jsonl')]    
+    datasets_silver = [f for f in os.listdir(DATASET_FOLDER_SILVER) if f.endswith('.jsonl')]
+    datasets_gold = [f for f in os.listdir(DATASET_FOLDER_GOLD) if f.endswith('.jsonl')]
+    return jsonify(datasets_gold)
 
 @app.route('/DataAlgorithmProcessing/run-algorithm', methods=['POST'])
 def run_algorithm():
@@ -262,14 +371,50 @@ def run_algorithm():
 
     # Run clustering
     try:
-        result = run_clustering(df, algorithm, params)
+        result = run_clustering(df, algorithm, params, dataset)
         print("Clustering result:", result)  # Debugging
     except Exception as e:
         print("Error in clustering:", str(e))  # Debugging
         return jsonify({"error": f"Failed to run algorithm '{algorithm}': {str(e)}"}), 500
 
-    return jsonify(result)
+    try:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_file = os.path.join(DATASET_FOLDER_MODEL_ZOO, f"{algorithm}_{timestamp}.jsonl")
 
+        with open(output_file, 'w') as f:
+            json.dump(result, f)
+            f.write("\n")  # JSONL format
+
+        return jsonify({"message": "Algorithm executed successfully", "output_file": output_file, "result": result})
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to save results: {str(e)}"}), 500
+
+
+@app.route('/ModelZoo/get-files', methods=['GET'])
+def list_files():
+    try:
+        files = [f for f in os.listdir(DATASET_FOLDER_MODEL_ZOO) if f.endswith('.jsonl')]
+        print('Found the files:',files)
+        return jsonify(files)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/ModelZoo/get-files/<filename>', methods=['GET'])
+def get_file(filename):
+    print('Filename:',filename)
+    file_path = os.path.join(DATASET_FOLDER_MODEL_ZOO, filename)
+
+    if not os.path.exists(file_path):
+        return jsonify({"error": "File not found"}), 404
+
+    try:
+        with open(file_path, 'r') as f:
+            result = json.loads(f.readline())  # Read only the first JSONL entry
+            print(result)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True,host='localhost',port=5000)
