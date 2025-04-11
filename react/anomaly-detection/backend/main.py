@@ -6,7 +6,7 @@ import zipfile
 import pandas as pd
 import numpy as np
 import time
-
+import requests
 from sklearn.preprocessing import StandardScaler
 from io import BytesIO
 from PIL import Image
@@ -81,6 +81,80 @@ def convert_ndarrays_to_lists(df):
     return df
 
 
+@app.route('/test', methods=['GET'])
+def get_test():
+    return jsonify({"test": "Backend Online"})
+
+
+
+@app.route('/PipelineExecution', methods=['POST'])
+def execute_pipeline():
+    try:
+        data = request.get_json()
+        algorithm = data.get('algorithm')
+        params = data.get('params', {})
+        missing_value_strategy = data.get('missingValueStrategy')
+        scaling_method = data.get('scalingMethod')
+
+        if not all([algorithm, missing_value_strategy, scaling_method]):
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Step 1: Call /DataCleaning API (uses checked_df.jsonl from Silver)
+        cleaning_payload = {
+            "missingValueStrategy": missing_value_strategy,
+            "scalingMethod": scaling_method
+        }
+        cleaning_response = requests.post("http://localhost:5000/DataCleaning", json=cleaning_payload)
+        if cleaning_response.status_code != 200:
+            return jsonify({"error": "❌ Data cleaning failed", "details": cleaning_response.json()}), 500
+
+        # Step 2: List all .jsonl files in Gold folder
+        gold_files = [f for f in os.listdir(DATASET_FOLDER_GOLD) if f.endswith('.jsonl')]
+        results = []
+
+        # Step 3: For each Gold file, run clustering
+        for gold_file in gold_files:
+            print(f"🔍 Running algorithm on: {gold_file}")
+            algorithm_payload = {
+                "dataset": gold_file,
+                "algorithm": algorithm,
+                "params": params
+            }
+
+            clustering_response = requests.post("http://localhost:5000/DataAlgorithmProcessing/run-algorithm", json=algorithm_payload)
+
+            if clustering_response.status_code == 200:
+                clustering_data = clustering_response.json()
+
+                result_obj = clustering_data.get("result", {})
+                result_obj.update({
+                    "dataset": gold_file,
+                    "output_file": clustering_data.get("output_file")
+                })
+
+                results.append({
+                    "result": result_obj
+                })
+            else:
+                results.append({
+                    "dataset": gold_file,
+                    "error": clustering_response.json()
+                })
+                
+        return jsonify({
+            "message": f"✅ Full pipeline executed on {len(gold_files)} datasets",
+            "results": results
+        })
+
+    except Exception as e:
+        print("❌ Error executing pipeline:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+
+
+
+
+
 @app.route('/FileUpload', methods=['POST'])
 def fileUpload():
     if 'file' not in request.files:
@@ -152,6 +226,7 @@ def dataCleaning():
 
         time_features_path = os.path.join("outputs", "Gold", "time_domain_features.jsonl")
         if not os.path.exists(time_features_path):
+            global time_features, frequency_features, time_frequency_features
             time_features, frequency_features, time_frequency_features = extract_features(cleaned_df)
             data_frame_to_jsonl(time_features, "time_domain_features", "Gold")
             data_frame_to_jsonl(frequency_features, "frequency_domain_features", "Gold")

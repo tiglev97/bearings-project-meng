@@ -46,20 +46,32 @@ const ModelZoo = () => {
 
 
   return (
-    <Container>
-      <Typography variant="h4" gutterBottom>Model Zoo</Typography>
 
-      {loading && <CircularProgress />}
-      {error && <Alert severity="error">{error}</Alert>}
+    <div style={{ 
+      padding: "20px",
+      textAlign: 'center',
+      backgroundImage: 'url(/gears.jpg)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      minHeight: '100vh',}}>
 
-      {/* ✅ Display all ResultsDisplay components */}
-      {Object.entries(data).map(([filename, resultData]) => (
-        <div key={filename} style={{ marginBottom: "20px" }}>
-          <Typography variant="h6">{filename}</Typography>
-          <ResultsDisplay results={{ result: resultData }} />
-        </div>
-      ))}
-    </Container>
+      <Login /> 
+
+      <Container>
+        <h1 style={{ fontSize: '60px', paddingTop: '10px' , textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)'}}>Model Zoo</h1>
+
+        {loading && <CircularProgress />}
+        {error && <Alert severity="error">{error}</Alert>}
+
+        {/* ✅ Display all ResultsDisplay components */}
+        {Object.entries(data).map(([filename, resultData]) => (
+          <div key={filename} style={{ marginBottom: "20px" }}>
+            <Typography variant="h6">{filename}</Typography>
+            <ResultsDisplay results={{ result: resultData }} />
+          </div>
+        ))}
+      </Container>
+    </div>
   );
 };
 
