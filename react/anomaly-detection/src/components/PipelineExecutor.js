@@ -126,11 +126,18 @@ function PipelineExecutor() {
       <button onClick={handleSubmit} style={{
         padding: "10px 20px",
         fontSize: "16px",
-        backgroundColor: "#002366",
-        color: "white",
+        backgroundColor: "#007bff", 
+        color: "#fff",
+        border: "none",             
         borderRadius: "5px",
-        cursor: "pointer"
-      }}>
+        cursor: "pointer",
+        transition: "transform 0.3s ease-in-out", 
+  
+      }}
+      
+      onMouseEnter={(e) => (e.target.style.transform = "scale(1.2)")}
+      onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
+      >
         Run Pipeline
       </button>
 

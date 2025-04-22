@@ -61,7 +61,7 @@ const FileUpload = ({ onUploadSuccess }) => {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.h1}>Upload File</h1>
+      <h1 style={styles.h1}>📤 Upload File</h1>
       <input type="file" onChange={handleFileChange} />
       <button onClick={handleFileUpload} className="jump-button" style={styles.button}>
         Upload
@@ -90,13 +90,15 @@ const styles = {
     alignItems: "center",
     gap: "1rem",
     margin: "auto",
+    marginBottom: "3rem",
     padding: "1rem",
     border: "1px solid #ddd",
     borderRadius: "5px",
     boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
     backgroundColor: "#f9f9f9",
-    width: "60%",
+    width: "75%",
   },
+
   h1: {
     fontSize: "30px",
     fontWeight: "bold",
