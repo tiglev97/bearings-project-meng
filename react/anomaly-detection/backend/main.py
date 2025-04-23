@@ -14,6 +14,10 @@ import base64
 import json
 import datetime
 
+#Login
+from werkzeug.security import generate_password_hash, check_password_hash
+import uuid
+
 
 from pipelines.DataEntry import data_entry
 from pipelines.BronzeDataEntry import get_bronze_data_path
@@ -415,6 +419,39 @@ def get_file(filename):
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+    
+#Added code below
+# Dummy in-memory user store
+users = {}
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    username = data.get('username')
+
+    if email in users:
+        return jsonify({'success': False, 'message': 'User already exists'}), 400
+
+    users[email] = {'password': password, 'username': username}
+    return jsonify({'success': True, 'message': 'User registered successfully'}), 201
+
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    user = users.get(email)
+    if user and user['password'] == password:
+        return jsonify({'success': True, 'message': 'Login successful', 'username': user['username']})
+    return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+
 
 if __name__ == '__main__':
     app.run(debug=True,host='localhost',port=5000)
