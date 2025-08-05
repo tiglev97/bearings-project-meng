@@ -11,7 +11,6 @@ from sklearn.preprocessing import StandardScaler
 from io import BytesIO
 from PIL import Image
 import base64
-import json
 import datetime
 
 #Login
@@ -25,6 +24,24 @@ from pipelines.JsonlConverter import jsonl_to_dataframe, data_frame_to_jsonl
 from pipelines.DataChecks import data_checks
 from pipelines.FeatureCreationForTimeSeries import DataCleanPipeline, extract_features
 from pipelines.MLAlgorithm import run_clustering
+
+import json
+import matplotlib.pyplot as plt
+import scipy.stats as st
+from sklearn.decomposition import PCA
+from tslearn.preprocessing import TimeSeriesScalerMeanVariance
+from tslearn.clustering import TimeSeriesKMeans
+from scipy.spatial.distance import jensenshannon
+from scipy.stats import wasserstein_distance
+from torch.utils.data import DataLoader, Dataset
+
+from torch.utils.data import TensorDataset, DataLoader
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+from sklearn.model_selection import train_test_split
 
 app = Flask(__name__)
 CORS(app)
@@ -451,6 +468,264 @@ def login():
     if user and user['password'] == password:
         return jsonify({'success': True, 'message': 'Login successful', 'username': user['username']})
     return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
+
+
+#Error is here....
+
+@app.route('/BearingAssessment/predict', methods=['POST'])
+def bearing_assessment_predict():
+    try:
+        data = request.get_json()
+        selected_file = data.get('filename')
+
+        if not selected_file:
+            return jsonify({"error": "No filename provided"}), 400
+
+        file_path = os.path.join(DATASET_FOLDER_SILVER, selected_file)
+
+        if not os.path.exists(file_path):
+            return jsonify({"error": f"File {selected_file} not found"}), 404
+        
+        print('checkpoint1')
+
+        # Load JSONL data
+        valid_rows = []
+        with open(file_path, 'r', encoding='utf-8') as f:
+            for i, line in enumerate(f, 1):
+                try:
+                    valid_rows.append(json.loads(line))
+                except json.JSONDecodeError as e:
+                    print(f"⚠️ Skipping line {i} due to JSON error: {e}")
+
+
+        data_df = pd.DataFrame(valid_rows)
+        data_df = data_df.iloc[0:50] #having a dataframe that is too long makes the application crash!
+        #print(data_df)
+
+        print('checkpoint2')
+
+
+        columns_to_drop = [
+            'identifier',
+            'bearing',
+            'split',
+            'channel_x_z_scores',
+            'channel_x_anomalies',
+            'channel_y_z_scores',
+            'channel_y_anomalies'
+        ]
+
+        data_df = data_df.drop(columns=columns_to_drop, errors='ignore')
+
+        # Trim sequences
+        def trim_sequences(data, length):
+            return [x[:length] + [0.0] * max(0, length - len(x)) for x in data]
+
+        def prepare_input(series, length):
+            trimmed = trim_sequences(series, length)
+            return torch.tensor(trimmed, dtype=torch.float32)
+
+        CHANNEL_X_LEN = 2559
+        CHANNEL_Y_LEN = 2559
+
+        x_tensor = prepare_input(data_df["channel_x"].tolist(), CHANNEL_X_LEN)
+        y_tensor = prepare_input(data_df["channel_y"].tolist(), CHANNEL_Y_LEN)
+
+        print('checkpoint 3. Tensors prepared')
+
+        #### Channel X model
+
+        class Attention(nn.Module):
+            #Going to use attention to track the features
+            def __init__(self, input_dim):
+                super(Attention, self).__init__()
+                self.attn = nn.Linear(input_dim, 1)
+
+            def forward(self, x):
+                # x: [batch, seq_len, features]
+                attn_weights = F.softmax(self.attn(x), dim=1)
+                context = torch.sum(attn_weights * x, dim=1)
+                return context
+
+
+        class AttentionBearingClassifier(nn.Module):
+            def __init__(self, num_classes=4):
+                super(AttentionBearingClassifier, self).__init__()
+
+                self.name = 'AttentionBearingClassifier'
+
+                self.feature_extractor = nn.Sequential(
+                    nn.Conv1d(1, 32, kernel_size=7, stride=2, padding=3),
+                    nn.BatchNorm1d(32),
+                    nn.ReLU(),
+                    nn.Conv1d(32, 64, kernel_size=5, stride=2, padding=2),
+                    nn.BatchNorm1d(64),
+                    nn.ReLU(),
+                    nn.Conv1d(64, 128, kernel_size=5, stride=2, padding=2),
+                    nn.BatchNorm1d(128),
+                    nn.ReLU(),
+                    nn.Conv1d(128, 256, kernel_size=3, stride=2, padding=1),
+                    nn.BatchNorm1d(256),
+                    nn.ReLU()
+                )
+
+                self.attn = Attention(input_dim=256)
+
+                self.classifier = nn.Sequential(
+                    nn.Linear(256, 128),
+                    nn.ReLU(),
+                    nn.Dropout(0.3),
+                    nn.Linear(128, num_classes)
+                )
+
+            def forward(self, x):
+                x = x.unsqueeze(1)
+                x = self.feature_extractor(x)
+                x = x.permute(0, 2, 1)
+                x = self.attn(x)
+                out = self.classifier(x)
+
+                return out
+
+        ##### Channel y model
+
+        class MultiHeadAttention(nn.Module):
+            def __init__(self, input_dim, num_heads=4):
+                super(MultiHeadAttention, self).__init__()
+                self.attn = nn.MultiheadAttention(embed_dim=input_dim, num_heads=num_heads, batch_first=True)
+                self.norm = nn.LayerNorm(input_dim)
+
+            def forward(self, x):
+                attn_output, _ = self.attn(x, x, x)
+                return self.norm(torch.sum(attn_output, dim=1))
+
+        class DeepAttentionBearingClassifier(nn.Module):
+            def __init__(self, num_classes=4):
+                super(DeepAttentionBearingClassifier, self).__init__()
+
+                self.name = 'DeepAttentionBearingClassifier'
+
+                self.feature_extractor = nn.Sequential(
+                    nn.Conv1d(1, 64, kernel_size=5, stride=1, padding=2),
+                    nn.BatchNorm1d(64),
+                    nn.ReLU(),
+
+                    nn.Conv1d(64, 128, kernel_size=5, stride=2, padding=2),
+                    nn.BatchNorm1d(128),
+                    nn.ReLU(),
+
+                    nn.Conv1d(128, 256, kernel_size=3, stride=2, padding=1),
+                    nn.BatchNorm1d(256),
+                    nn.ReLU(),
+
+                    nn.Conv1d(256, 512, kernel_size=3, stride=2, padding=1),
+                    nn.BatchNorm1d(512),
+                    nn.ReLU(),
+
+                    nn.Conv1d(512, 768, kernel_size=3, stride=2, padding=1),
+                    nn.BatchNorm1d(768),
+                    nn.ReLU()
+                )
+
+                self.res_block1 = nn.Sequential(
+                    nn.Conv1d(768, 768, kernel_size=3, padding=1),
+                    nn.BatchNorm1d(768),
+                    nn.ReLU(),
+                    nn.Conv1d(768, 768, kernel_size=3, padding=1),
+                    nn.BatchNorm1d(768)
+                )
+
+                self.res_block2 = nn.Sequential(
+                    nn.ReLU(),
+                    nn.Conv1d(768, 768, kernel_size=3, padding=1),
+                    nn.BatchNorm1d(768),
+                    nn.ReLU(),
+                    nn.Conv1d(768, 768, kernel_size=3, padding=1),
+                    nn.BatchNorm1d(768)
+                )
+
+                self.attention = MultiHeadAttention(input_dim=768, num_heads=8)
+
+                self.classifier = nn.Sequential(
+                    nn.Linear(768, 512),
+                    nn.ReLU(),
+                    nn.Dropout(0.4),
+
+                    nn.Linear(512, 256),
+                    nn.ReLU(),
+                    nn.Dropout(0.3),
+
+                    nn.Linear(256, 128),
+                    nn.ReLU(),
+                    nn.Dropout(0.2),
+
+                    nn.Linear(128, num_classes)
+                )
+
+            def forward(self, x):
+                x = x.unsqueeze(1)  # [B, 1, L]
+                x = self.feature_extractor(x)  # [B, 768, L']
+
+                # Residual Blocks
+                res1 = x
+                x = self.res_block1(x)
+                x = F.relu(x + res1)
+
+                res2 = x
+                x = self.res_block2(x)
+                x = F.relu(x + res2)
+
+                x = x.permute(0, 2, 1)  # [B, L', 768]
+                x = self.attention(x)   # [B, 768]
+                out = self.classifier(x)
+                return out
+
+
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        # Load models
+        model_x = AttentionBearingClassifier(num_classes=4)
+        model_x.load_state_dict(torch.load("C:\\Users\\tigra\\OneDrive\\Documents\\GitHub\\bearings-project-meng\\react\\anomaly-detection\\backend\\pipelines\\attention_classifier_epoch_10 (2).pth", map_location=device))
+        model_x.to(device)
+
+        model_y = DeepAttentionBearingClassifier(num_classes=4)
+        model_y.load_state_dict(torch.load("C:\\Users\\tigra\\OneDrive\\Documents\\GitHub\\bearings-project-meng\\react\\anomaly-detection\\backend\\pipelines\\attention_classifier_epoch_16.pth", map_location=device))
+        model_y.to(device)
+
+        print('checkpoint 4. Models loaded')
+
+        def run_predictions(model, data_tensor):
+            model.eval()
+            results = []
+            loader = DataLoader(TensorDataset(data_tensor), batch_size=32)
+            with torch.no_grad():
+                for batch in loader:
+                    x = batch[0].to(device)
+                    preds = model(x).argmax(dim=1).cpu().numpy()
+                    results.extend(preds)
+            return results
+
+        data_df.insert(data_df.columns.get_loc("channel_x") + 1, "wear_condition_x", [x + 1 for x in run_predictions(model_x, x_tensor)])
+        data_df.insert(data_df.columns.get_loc("channel_y") + 1, "wear_condition_y", [y + 1 for y in run_predictions(model_y, y_tensor)])
+
+        print('checkpoint 5. Predictions made')
+
+        return jsonify(data_df.to_dict(orient='records'))
+
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/BearingAssessment/list-silver-files', methods=['GET'])
+def list_silver_files():
+    silver_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'outputs', 'Silver'))
+    try:
+        files = [f for f in os.listdir(silver_dir) if f.endswith('.jsonl')]
+        return jsonify(files)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == '__main__':

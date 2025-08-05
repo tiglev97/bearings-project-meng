@@ -6,7 +6,7 @@ import DataProcessingAlgorithms from "./pages/3_DataProcessingAlgorithmnsPage";
 import ModelZoo from "./pages/4_ModelZooPage";
 import DataCleaning from "./pages/5_DataCleaning";
 import Main from "./pages/Main";
-import Testpage from "./pages/test";
+import Model_Predictor from "./pages/6_ConditionAssessment";
 import Navigator from "./components/Navigator"; 
 import "./index.css";
 
@@ -29,7 +29,7 @@ function App() {
             <Route path="/data_processing" element={<DataProcessingAlgorithms />} />
             <Route path="/model_zoo" element={<ModelZoo />} />
             <Route path="/data_cleaning" element={<DataCleaning checkedDf={checkedDf} />} />  {/* ✅ Pass checkedDf */}
-            <Route path="/test" element={<Testpage />} />
+            <Route path="/condition_assessment" element={<Model_Predictor />} />
           </Routes>
         </div>
       </div>

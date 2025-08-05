@@ -152,8 +152,8 @@ function Sidebar({ onToggle }) {
                   e.currentTarget.querySelector("a").style.color = "white";
                 }}
               >
-                <Link to="/test" style={styles.link}>
-                  Test Page
+                <Link to="/condition_assessment" style={styles.link}>
+                  Condition Assessment
                 </Link>
               </li>
             </ul>
